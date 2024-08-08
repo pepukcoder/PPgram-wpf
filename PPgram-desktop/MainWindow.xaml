@@ -1,0 +1,82 @@
+﻿<Window x:Class="PPgram_desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Icon="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+        xmlns:viewmodel="clr-namespace:PPgram_desktop.MVVM.ViewModel"
+        xmlns:core="clr-namespace:PPgram_desktop.Core"
+        xmlns:local="clr-namespace:PPgram_desktop"
+        mc:Ignorable="d"
+        Title="PPgram Desktop" MinHeight="640" MinWidth="800" Background="{StaticResource BackgroundDark}">
+    <Window.DataContext>
+        <viewmodel:MainViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <core:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border x:Name="Sidebar" Grid.Column="0" Background="{StaticResource BackgroundLight}" 
+                Visibility="{Binding SidebarVisible, Converter={StaticResource BoolToVisibilityConverter}}" Width="260">
+            <Grid Margin="8,0,8,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Vertical" Background="Transparent">
+                    <StackPanel x:Name="ProfileCard" Grid.Row="0" Orientation="Horizontal" Margin="0,8,0,0" Height="50">
+                        <Ellipse Width="40" Height="40" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <Ellipse.Fill>
+                                <SolidColorBrush Color="White"/>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Center" Width="148" Margin="8,0,8,0">
+                            <TextBlock Text="NoFC Pepukcoder" Foreground="{StaticResource PrimaryText}" FontSize="14" FontWeight="SemiBold" FontFamily="Montserrat"/>
+                            <TextBlock Text="@pepukcoder" Foreground="{StaticResource SecondaryText}" FontSize="14" FontFamily="Montserrat" Margin="0,3,0,0"/>
+                        </StackPanel>
+                        <Button x:Name="SettingsButton" Command="{Binding SettingsButtonCommand}" Background="Transparent" Height="24" Style="{StaticResource IconButton}" VerticalAlignment="Center">
+                            <Icon:MaterialIcon Kind="Cog" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Button>
+                    </StackPanel>
+                    <Border Grid.Row="0" Height="2" Background="{StaticResource BackgroundDark}" Margin="10"/>
+                    <Border CornerRadius="5" Height="30" HorizontalAlignment="Stretch" Background="{StaticResource UserHighlight}" Margin="0,0,0,10">
+                        <StackPanel x:Name="NewChatBar" Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Icon:MaterialIcon Kind="AccountPlus" Width="24" Margin="8,0,8,0" Foreground="{StaticResource UserSelected}"/>
+                            <TextBox x:Name="NewChatTextBox" Margin="0" Width ="200" BorderThickness="0" 
+                                     TextAlignment="Left" FontFamily="Montserrat" 
+                                     FontSize="14" VerticalContentAlignment="Center" 
+                                     MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                                     Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
+                                     Text="{Binding NewChatName, UpdateSourceTrigger=PropertyChanged}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Command="{Binding NewChatCommand}" Key="Return"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+                <ListView Grid.Row="1"
+                          VerticalAlignment="Stretch"
+                          ItemsSource="{Binding Chats}"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                          ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                          ItemContainerStyle="{StaticResource UserItem}"
+                          SelectedItem="{Binding SelectedChat}"
+                          SelectedIndex="0"
+                          Padding="0">
+                </ListView>
+            </Grid>
+        </Border>
+        
+        <!--chat-->
+        <Frame Grid.Column="1" x:Name="MainFrame" Content="{Binding CurrentPage}" NavigationUIVisibility="Hidden" Navigated="MainFrame_Navigated"/>
+
+    </Grid>
+</Window>

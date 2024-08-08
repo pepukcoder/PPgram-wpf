@@ -1,0 +1,73 @@
+﻿<Page x:Class="PPgram_desktop.MVVM.View.LoginPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:Icon="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+      xmlns:viewmodel="clr-namespace:PPgram_desktop.MVVM.ViewModel"
+      xmlns:core="clr-namespace:PPgram_desktop.Core"
+      xmlns:local="clr-namespace:PPgram_desktop.MVVM.View"
+      mc:Ignorable="d" 
+      MinHeight="400" MinWidth="520"
+      Title="LoginPage">
+    <Page.DataContext>
+        <viewmodel:LoginViewModel/>
+    </Page.DataContext>
+    <Page.Resources>
+        <core:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" TrueValue="Visible" FalseValue="Collapsed"/>
+    </Page.Resources>
+    <Grid>
+        <Border VerticalAlignment="Center">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                <Image Source="/Asset/logo.png" Height="120" Width="120" Margin="0,0,0,10"/>
+                <TextBlock Text="Welcome to PPgram!" TextAlignment="Center" FontFamily="Montserrat"
+                           FontWeight="Bold" Foreground="White"
+                           FontSize="24" Margin="0,10,0,10"/>
+                <Border CornerRadius="5" Height="40" 
+                        HorizontalAlignment="Center" 
+                        Background="{StaticResource UserHighlight}"
+                        Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Icon:MaterialIcon Kind="Account" Width="24" Margin="8,0,8,0" Foreground="{StaticResource UserSelected}"/>
+                        <TextBox x:Name="TextBox_Login" Margin="0,0,8,0" MinWidth ="250" BorderThickness="0" 
+                                 TextAlignment="Left" FontFamily="Montserrat" 
+                                 FontSize="14" VerticalContentAlignment="Center" 
+                                 MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                                 Background="Transparent" CaretBrush="White" 
+                                 SelectionBrush="{StaticResource UserSelected}"
+                                 Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"> 
+                        </TextBox>
+                    </StackPanel>
+                </Border>
+                <Border CornerRadius="5" Height="40" 
+                        HorizontalAlignment="Center" 
+                        Background="{StaticResource UserHighlight}"
+                        Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Icon:MaterialIcon Kind="Key" Width="24" Margin="8,0,8,0" Foreground="{StaticResource UserSelected}"/>
+                        <PasswordBox x:Name="TextBox_Password" Margin="0,0,8,0" MinWidth="250" BorderThickness="0" 
+                                     FontFamily="Montserrat" 
+                                     FontSize="14" VerticalContentAlignment="Center" 
+                                     MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                                     Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
+                                     PasswordChanged="TextBox_Password_PasswordChanged">
+                        </PasswordBox>
+                    </StackPanel>
+                </Border>
+
+                <!--#region CREATE AND LOGIN BUTTONS-->
+                <Button Style="{StaticResource RegularButton}"
+                        MaxWidth="240" Height="40" Command="{Binding LoginCommand}"
+                        Margin="0,10,0,0">
+                    <TextBlock Text="Login" 
+                               FontFamily="Montserrat" FontSize="14" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <Button Style="{StaticResource IconButton}" Margin="0,5,0,0" Command="{Binding ToRegCommand}" HorizontalAlignment="Center">
+                    <TextBlock FontStyle="Normal" FontSize="14">Create a new account</TextBlock>
+                </Button>
+                <!--#endregion-->
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPgram-desktop", "PPgram-desktop.csproj", "{35C1ED7D-F9F1-4075-9A7A-F119D7321D75}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPgram-desktop", "PPgram-desktop\PPgram-desktop.csproj", "{339B0AC8-FB0C-4632-A340-B00C72165751}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{35C1ED7D-F9F1-4075-9A7A-F119D7321D75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{35C1ED7D-F9F1-4075-9A7A-F119D7321D75}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{35C1ED7D-F9F1-4075-9A7A-F119D7321D75}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{35C1ED7D-F9F1-4075-9A7A-F119D7321D75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{339B0AC8-FB0C-4632-A340-B00C72165751}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{339B0AC8-FB0C-4632-A340-B00C72165751}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{339B0AC8-FB0C-4632-A340-B00C72165751}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{339B0AC8-FB0C-4632-A340-B00C72165751}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {3B50BF0B-677A-4D18-A81F-D650EB12AC94}
+		SolutionGuid = {60DB4913-D39C-4E9D-93EA-6D905A454E2A}
 	EndGlobalSection
 EndGlobal
