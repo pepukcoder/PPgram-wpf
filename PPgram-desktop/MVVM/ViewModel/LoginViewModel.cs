@@ -1,13 +1,8 @@
-﻿using PPgram_desktop.Core;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
+
+using PPgram_desktop.Core;
 
 namespace PPgram_desktop.MVVM.ViewModel;
 
@@ -20,6 +15,18 @@ class LoginViewModel : INotifyPropertyChanged
     #region bindings
     public string Login { get; set; }
     public string Password { private get; set; }
+    private bool _isError;
+    public bool IsError
+    {
+        get { return _isError; }
+        set { _isError = value; OnPropertyChanged(); }
+    }
+    private string _error;
+    public string Error
+    {
+        get { return _error; }
+        set { _error = value; OnPropertyChanged(); }
+    }
     #endregion
 
     #region commands
@@ -32,10 +39,7 @@ class LoginViewModel : INotifyPropertyChanged
         ToRegCommand = new RelayCommand(o => GoToReg());
         LoginCommand = new RelayCommand(o => TryLogin());
     }
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
+    
     private void GoToReg()
     {
         ToReg?.Invoke(this, new EventArgs());
@@ -47,7 +51,16 @@ class LoginViewModel : INotifyPropertyChanged
             login = Login,
             password = Password
         });
+    }
+    private void ShowError(string error)
+    {
+        Error = error;
+        IsError = true;
+    }
 
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
 class LoginEventArgs : EventArgs

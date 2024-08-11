@@ -1,25 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Net.Sockets;
-using System.Threading.Tasks;
-using PPgram_desktop.Net.IO;
 using System.Windows;
 using System.Text.Json.Serialization;
+
 using PPgram_desktop.MVVM.Model;
-using System.Text.Json;
+using PPgram_desktop.Net.IO;
 
 namespace PPgram_desktop.Net;
 
 class Client
 {
-    TcpClient client;
-    NetworkStream stream;
-
     public event EventHandler<AuthEventArgs> AuthorizedEvent;
     public event EventHandler<MessageEventArgs> MessageRecievedEvent;
     public event EventHandler<MessageEventArgs> DisconnectedEvent;
+
+    private readonly TcpClient client;
+    private NetworkStream stream;
 
     public Client()
     {
@@ -27,6 +23,7 @@ class Client
     }
     public void Connect(string host, int port)
     {
+
         if (!client.Connected)
         {
             try
@@ -37,9 +34,9 @@ class Client
                 Thread listenThread = new(new ThreadStart(Listen));
                 listenThread.Start();
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-
+                // MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
             }
         }
     }
@@ -51,7 +48,7 @@ class Client
             {
                 int read_count;
 
-                //Get server response length
+                // get server response length
                 byte[] length_bytes = new byte[4];
                 read_count = stream.Read(length_bytes, 0, 4);
                 if (read_count == 0) break;
@@ -59,25 +56,24 @@ class Client
 
                 int length = BitConverter.ToInt32(length_bytes);
 
-                //Get server response itself
+                // get server response itself
                 byte[] responseBytes = new byte[length];
                 read_count = stream.Read(responseBytes, 0, length);
                 if (read_count == 0) break;
 
                 string response = Encoding.UTF8.GetString(responseBytes);
                 MessageBox.Show(response);
-                //TODO
-                //Parse response id and type 
-                //Invoke corresponding events in ViewModels
 
+                // TODO
+                // parse response method 
+                // invoke events in ViewModels
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine(ex.Message);
+                // MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
             }
         }
     }
-
     public void AuthorizeWithSessionId(string session_id)
     {
 
@@ -87,6 +83,18 @@ class Client
         
     }
     public void RegisterNewUser(string username, string name, string password_hash)
+    {
+
+    }
+    public void FetchUsers()
+    {
+
+    }
+    public void FetchUser(string Id)
+    {
+
+    }
+    public void FetchUserMessages(string Id)
     {
 
     }

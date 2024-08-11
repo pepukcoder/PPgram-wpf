@@ -15,7 +15,7 @@
     <Window.Resources>
         <core:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </Window.Resources>
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -70,13 +70,13 @@
                           ItemContainerStyle="{StaticResource UserItem}"
                           SelectedItem="{Binding SelectedChat}"
                           SelectedIndex="0"
-                          Padding="0">
+                          Padding="0"
+                          >
                 </ListView>
             </Grid>
         </Border>
-        
+
         <!--chat-->
         <Frame Grid.Column="1" x:Name="MainFrame" Content="{Binding CurrentPage}" NavigationUIVisibility="Hidden" Navigated="MainFrame_Navigated"/>
-
     </Grid>
 </Window>

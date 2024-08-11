@@ -7,12 +7,19 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Asset\default_avatar.png" />
     <None Remove="Asset\logo.png" />
+    <None Remove="Asset\logo_black.png" />
+    <None Remove="Asset\logo_round.png" />
     <None Remove="oioi.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +30,8 @@
   <ItemGroup>
     <Resource Include="Asset\default_avatar.png" />
     <Resource Include="Asset\logo.png" />
+    <Resource Include="Asset\logo_black.png" />
+    <Resource Include="Asset\logo_round.png" />
   </ItemGroup>
 
   <ItemGroup>

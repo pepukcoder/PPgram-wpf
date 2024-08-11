@@ -3,9 +3,11 @@
     
     <SolidColorBrush x:Key="DarkAccent" Color="#202123"/>
     <SolidColorBrush x:Key="LightAccent" Color="#f7f6f6"/>
+    
     <SolidColorBrush x:Key="PrimaryText" Color="#ffffff"/>
     <SolidColorBrush x:Key="SecondaryText" Color="#8c8c8d"/>
-
+    <SolidColorBrush x:Key="TextSelection" Color="#2a2a2a"/>
+    
     <SolidColorBrush x:Key="UserHighlight" Color="#131313"/>
     <SolidColorBrush x:Key="UserSelected" Color="#2a2a2a"/>
 

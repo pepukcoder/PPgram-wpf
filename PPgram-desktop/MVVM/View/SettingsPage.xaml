@@ -4,12 +4,40 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:viewmodel="clr-namespace:PPgram_desktop.MVVM.ViewModel"
+      xmlns:Icon="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
       xmlns:local="clr-namespace:PPgram_desktop.MVVM.View"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="SettingsPage">
-
+      MinHeight="500" MinWidth="520"
+      Title="SettingsPage"
+      FontFamily="Montserrat">
+    <Page.DataContext>
+        <viewmodel:SettingsViewModel/>
+    </Page.DataContext>
+    
     <Grid>
+        <Border Background="{StaticResource BackgroundLight}" 
+                CornerRadius="10" 
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Margin="10">
+                <Grid Margin="0,0,10,0">
+                    <Ellipse Width="50" Height="50">
+                        <Ellipse.Fill>
+                            <SolidColorBrush Color="AliceBlue"/>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                </Grid>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <TextBox FontSize="16" Background="Transparent" Foreground="{StaticResource PrimaryText}"
+                            BorderThickness="0" Padding="0" MaxLength="25"
+                            SelectionBrush="{StaticResource TextSelection}"
+                            Text="NoFC Pepukcoder"
+                            VerticalContentAlignment="Center"
+                            Margin="0,0,0,5"
+                            CaretBrush="White"/>
+                    <TextBlock FontSize="14" Foreground="{StaticResource SecondaryText}">@pepukcoder</TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </Border>
         
     </Grid>
 </Page>

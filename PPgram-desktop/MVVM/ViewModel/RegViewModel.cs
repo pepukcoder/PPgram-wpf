@@ -1,14 +1,8 @@
-﻿using PPgram_desktop.Core;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
+
+using PPgram_desktop.Core;
 
 namespace PPgram_desktop.MVVM.ViewModel;
 
@@ -16,48 +10,26 @@ class RegViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler ToLogin;
-
-
+    public EventHandler<RegisterEventArgs> SendRegister;
 
     #region bindings
     public string Name { get; set; }
     public string Username { get; set; }
-    private string _password = "";
-    public string Password
+    public string Password { get; set; }
+    public string ConfirmPassword { get; set; }
+
+    private bool _isError;
+    public bool IsError
     {
-        get { return _password; }
-        set { _password = value; ValidatePassword(); ValidatePasswordConfirm(); }
-    }
-    private string _confirmPassword = "";
-    public string ConfirmPassword
-    {
-        get { return _confirmPassword; }
-        set { _confirmPassword = value; ValidatePasswordConfirm(); }
+        get { return _isError; }
+        set { _isError = value; OnPropertyChanged(); }
     }
 
-    private bool _passOk;
-    public bool PassOk
+    private string _error;
+    public string Error
     {
-        get { return _passOk; }
-        set { _passOk = value; OnPropertyChanged(); }
-    }
-    private bool _passError;
-    public bool PassError
-    {
-        get { return _passError; }
-        set { _passError = value; OnPropertyChanged(); }
-    }
-    private bool _passConfOk;
-    public bool PassConfOk
-    {
-        get { return _passConfOk; }
-        set { _passConfOk = value; OnPropertyChanged(); }
-    }
-    private bool _passConfError;
-    public bool PassConfError
-    {
-        get { return _passConfError; }
-        set { _passConfError = value; OnPropertyChanged(); }
+        get { return _error; }
+        set { _error = value; OnPropertyChanged(); }
     }
     #endregion
 
@@ -68,42 +40,82 @@ class RegViewModel : INotifyPropertyChanged
     public RegViewModel() 
     {
         GoToLoginCommand = new RelayCommand(o => GoToLogin());
+        RegCommand = new RelayCommand(o => TryRegister());
     }
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+    private bool ValidateReg()
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-    private void ValidatePassword()
-    {
-        if (Password != null)
+        // check if all fields filled
+        if (String.IsNullOrWhiteSpace(Password)
+            || String.IsNullOrWhiteSpace(ConfirmPassword)
+            || String.IsNullOrWhiteSpace(Username)
+            || String.IsNullOrWhiteSpace(Name))
         {
-            if (Password.Length >= 8 && Password.Length <= 25)
+            ShowError("Missing data");
+            return false;
+        }
+        // check password length
+        if (Password.Length < 8 || Password.Length > 32)
+        {
+            ShowError("Invalid password");
+            return false;
+        }
+        // check password confirmation
+        if (Password != ConfirmPassword)
+        {
+            ShowError("Passwords do not match");
+            return false;
+        }
+        // check username length
+        if (Username.Length <= 3)
+        {
+            ShowError("Invalid username");
+            return false;
+        }
+        // check if username is valid characters
+        foreach (char c in Username)
+        {
+            if (!Char.IsAsciiLetterOrDigit(c))
             {
-                PassOk = true;
-                PassError = false;
-            }
-            else
-            {
-                PassOk = false;
-                PassError = true;
+                ShowError("Invalid username");
+                return false;
             }
         }
+        Error = "";
+        IsError = false;
+        return true;
     }
-    private void ValidatePasswordConfirm()
+    private void TryRegister()
     {
-        if (Password.Length >= 8 && Password == ConfirmPassword)
+        if (!ValidateReg())
         {
-            PassConfOk = true;
-            PassConfError = false;
+            return;
         }
-        else
+        SendRegister?.Invoke(this, new RegisterEventArgs
         {
-            PassConfError = true;
-            PassConfOk = false;
-        }
+            name = Name,
+            username = Username,
+            password = Password,
+        });
     }
     private void GoToLogin()
     {
         ToLogin?.Invoke(this, new EventArgs());
     }
+    private void ShowError(string error)
+    {
+        Error = error;
+        IsError = true;
+    }
+
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+}
+
+class RegisterEventArgs : EventArgs
+{
+    public string name;
+    public string username;
+    public string password;
 }
