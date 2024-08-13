@@ -1,18 +1,21 @@
 ﻿using System.Text;
 using System.Net.Sockets;
-using System.Windows;
-using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using PPgram_desktop.MVVM.Model;
 using PPgram_desktop.Net.IO;
+using System.Windows;
 
 namespace PPgram_desktop.Net;
 
 class Client
 {
-    public event EventHandler<AuthEventArgs> AuthorizedEvent;
-    public event EventHandler<MessageEventArgs> MessageRecievedEvent;
-    public event EventHandler<MessageEventArgs> DisconnectedEvent;
+    public event EventHandler<ResponseAuthEventArgs> Authorized;
+    public event EventHandler<ResponseLoginEventArgs> LoggedIn;
+    public event EventHandler<ResponseRegisterEventArgs> Registered;
+    public event EventHandler<ResponseMessageEventArgs> MessageRecieved;
+    public event EventHandler Disconnected;
 
     private readonly TcpClient client;
     private NetworkStream stream;
@@ -32,11 +35,12 @@ class Client
                 stream = client.GetStream();
 
                 Thread listenThread = new(new ThreadStart(Listen));
+                listenThread.IsBackground = true;
                 listenThread.Start();
             }
             catch (Exception e)
             {
-                // MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
+                //MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
             }
         }
     }
@@ -63,50 +67,126 @@ class Client
 
                 string response = Encoding.UTF8.GetString(responseBytes);
                 MessageBox.Show(response);
-
-                // TODO
-                // parse response method 
-                // invoke events in ViewModels
+                // handle response
+                HandleResponse(response);
             }
             catch (Exception e)
             {
                 // MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
+                Stop();
             }
         }
     }
-    public void AuthorizeWithSessionId(string session_id)
+    private void HandleResponse(string response)
     {
-
+        string? method = JsonNode.Parse(response)?["method"]?.GetValue<string>();
+        bool? ok = JsonNode.Parse(response)?["ok"]?.GetValue<bool>();
+        string? error = JsonNode.Parse(response)?["error"]?.GetValue<string>();
+        switch (method)
+        {
+            case "login":
+                
+                if (ok == true)
+                {
+                    MessageBox.Show(response);
+                }
+                MessageBox.Show(error);
+                break;
+            case "register":
+                if (ok == true)
+                {
+                    MessageBox.Show(response);
+                }
+                MessageBox.Show(error);
+                break;
+            case "auth":
+                
+                break;
+        }
+    }
+    private void Stop()
+    {
+        Disconnected?.Invoke(this, new EventArgs());
+        stream.Close();
+        client.Close();
+    }
+    #region request methods
+    public void AuthorizeWithSessionId(string sessionId, int userId)
+    {
+        var data = new
+        {
+            method = "auth",
+            user_id = userId,
+            session_id = sessionId,
+        };
+        string request = JsonSerializer.Serialize(data);
+        stream.Write(RequestBuilder.GetBytes(request));
     }
     public void AuthorizeWithLogin(string login, string password)
     {
-        
+        var data = new
+        {
+            method = "login",
+            username = login,
+            password_hash = password
+        };
+        string request = JsonSerializer.Serialize(data);
+        stream.Write(RequestBuilder.GetBytes(request));
     }
-    public void RegisterNewUser(string username, string name, string password_hash)
+    public void RegisterNewUser(string newUsername, string newName, string newPassword)
+    {
+        var data = new
+        {
+            method = "register",
+            username = newUsername,
+            name = newName,
+            password_hash = newPassword
+        };
+        string request = JsonSerializer.Serialize(data);
+        stream.Write(RequestBuilder.GetBytes(request));
+    }
+    public void SendMessage(MessageModel message)
+    {
+        /*
+        var data = new
+        {
+            method = "",
+        };
+        string request = JsonSerializer.Serialize(data);
+        stream.Write(RequestBuilder.GetBytes(request));
+        */
+    }
+    public void FetchChats()
     {
 
     }
-    public void FetchUsers()
+    public void FetchUser(string id)
     {
 
     }
-    public void FetchUser(string Id)
+    public void FetchMessages(string id)
     {
 
     }
-    public void FetchUserMessages(string Id)
-    {
-
-    }
+    #endregion
 }
 
-class MessageEventArgs : EventArgs
+class ResponseMessageEventArgs : EventArgs
 {
     public int? sender_id;
     public int? receiver_id;
-    public ChatMessageModel? message;
+    public MessageModel? message;
 }
-class AuthEventArgs : EventArgs
+class ResponseLoginEventArgs : EventArgs
+{
+
+}
+class ResponseRegisterEventArgs : EventArgs
+{
+    public bool? ok;
+    public string? error;
+}
+class ResponseAuthEventArgs : EventArgs
 {
     public int? userId;
     public int? sessionId;

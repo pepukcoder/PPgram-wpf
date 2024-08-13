@@ -10,5 +10,5 @@ internal class UserModel
     public string AvatarSource { get; set; } = "";
     public string LastMessage { get; set; } = "";
 
-    public ObservableCollection<ChatMessageModel> Messages { get; set; } = [];
+    public ObservableCollection<MessageModel> Messages { get; set; } = [];
 }

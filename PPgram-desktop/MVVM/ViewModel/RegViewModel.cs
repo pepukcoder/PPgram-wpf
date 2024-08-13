@@ -101,7 +101,7 @@ class RegViewModel : INotifyPropertyChanged
     {
         ToLogin?.Invoke(this, new EventArgs());
     }
-    private void ShowError(string error)
+    public void ShowError(string error)
     {
         Error = error;
         IsError = true;

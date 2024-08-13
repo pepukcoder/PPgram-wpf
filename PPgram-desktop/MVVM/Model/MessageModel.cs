@@ -1,12 +1,12 @@
 ﻿namespace PPgram_desktop.MVVM.Model;
 
-internal class ChatMessageModel
+internal class MessageModel
 {
     #region API
     public string Id { get; set; } = "";
     public string Sender { get; set; } = "";
     public string Name { get; set; } = "";
-    public string AvatarSource { get; set; } = "";
+    public string AvatarSource { get; set; } = "/Asset/default_avatar.png";
 
     public string Text { get; set; } = "";
     public string Date { get; set; } = "00:00";

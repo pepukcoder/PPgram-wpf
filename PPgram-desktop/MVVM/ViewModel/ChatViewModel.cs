@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Input;
 
 using PPgram_desktop.Core;
@@ -14,8 +13,8 @@ class ChatViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     #region bindings
-    public ObservableCollection<ChatMessageModel> ChatMessages { get; set; }
-    public ChatMessageModel SelectedMessage { get; set; }
+    public ObservableCollection<MessageModel> ChatMessages { get; set; }
+    public MessageModel SelectedMessage { get; set; }
     private string _messageInput;
     public string MessageInput
     {
@@ -47,7 +46,7 @@ class ChatViewModel : INotifyPropertyChanged
     {
         if (MessageInput.Trim() != "")
         {
-            /*
+            /* TODO
             ChatMessages.Add(new ChatMessageModel
             {
                 Name = PROFILE NAME,
@@ -58,7 +57,9 @@ class ChatViewModel : INotifyPropertyChanged
                 IsLast = CHECK,
                 IsOwn = true
             });
-            MessageInput = "";*/
+            MessageInput = "";
+            client.SendMessage(message);
+            */
         }
     }
     private void DownloadFile()
@@ -66,4 +67,3 @@ class ChatViewModel : INotifyPropertyChanged
 
     }
 }
-

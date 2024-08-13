@@ -48,6 +48,7 @@ internal class MainViewModel : INotifyPropertyChanged
     private RegViewModel reg_vm = new();
     private SettingsPage settings_p = new();
     private SettingsViewModel settings_vm = new();
+    private ChatPage chat_p = new();
     #endregion
 
     #region commands
@@ -72,6 +73,7 @@ internal class MainViewModel : INotifyPropertyChanged
         login_p.DataContext = login_vm;
         reg_p.DataContext = reg_vm;
         settings_p.DataContext = settings_vm;
+        chat_p.DataContext = this;
 
         // pages events
         login_vm.ToReg += Login_vm_ToReg;
@@ -86,25 +88,24 @@ internal class MainViewModel : INotifyPropertyChanged
         {
             try
             {
-                client.Connect("127.0.0.1", 8080); // DEBUG
+                client.Connect("127.0.0.1", 8080);
                 connected = true;
             }
             catch { }
-        }     
+        }
 
         // client events
+        client.Authorized += Client_Authorized;
 
         // authorization
         if (File.Exists(sessionFilePath))
         {
             try
             {
-                string id = File.ReadAllText(sessionFilePath);
-                client.AuthorizeWithSessionId(id);
-
-                client.FetchUsers();
-
-                _sidebarVisible = true;
+                string[] lines = File.ReadAllLines(sessionFilePath);
+                string session_id = lines[0];
+                int user_id = Int32.Parse(lines[1]);
+                client.AuthorizeWithSessionId(session_id, user_id);
             }
             catch (Exception e)
             {
@@ -118,7 +119,14 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private void Client_MessageRecieved(object? sender, MessageEventArgs e)
+    #region client handlers
+    private void Client_Authorized(object? sender, ResponseAuthEventArgs e)
+    {
+        _sidebarVisible = true;
+        _currentPage = chat_p;
+        client.FetchChats();
+    }
+    private void Client_MessageRecieved(object? sender, ResponseMessageEventArgs e)
     {
         foreach (UserModel chat in Chats)
         {
@@ -128,12 +136,20 @@ internal class MainViewModel : INotifyPropertyChanged
             }
         }
     }
+    private void Client_Registered(object? sender, ResponseRegisterEventArgs e)
+    {
+        /*
+        if (e.ok != null && e.ok == true)
+        {
 
+        }
+        */
+    }
+    #endregion
     private void SettingsButton_Click()
     {
         
     }
-
     private void NewChat_Enter()
     {
         NewChatName = "";
@@ -149,7 +165,6 @@ internal class MainViewModel : INotifyPropertyChanged
         CurrentPage = reg_p;
     }
     #endregion
-
     #region Register page handlers
     private void Reg_vm_SendRegister(object? sender, RegisterEventArgs e)
     {

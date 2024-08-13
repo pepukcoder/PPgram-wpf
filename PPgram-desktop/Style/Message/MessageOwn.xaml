@@ -3,14 +3,6 @@
                     xmlns:Icon="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF">
     <ControlTemplate TargetType="ListViewItem" x:Key="MessageItemOwn">
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-            <Ellipse x:Name="UserAvatar"
-                Height="40" Width="40" VerticalAlignment="Bottom"
-                Margin="0,0,10,0"
-                Visibility="Collapsed">
-                <Ellipse.Fill>
-                    <ImageBrush ImageSource="{Binding AvatarSource}"/>
-                </Ellipse.Fill>
-            </Ellipse>
             <StackPanel Orientation="Vertical">
                 <Border Background="{StaticResource MessageOwn}"
                 x:Name="MessageBody"

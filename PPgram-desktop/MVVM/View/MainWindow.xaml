@@ -8,7 +8,8 @@
         xmlns:core="clr-namespace:PPgram_desktop.Core"
         xmlns:local="clr-namespace:PPgram_desktop"
         mc:Ignorable="d"
-        Title="PPgram Desktop" MinHeight="640" MinWidth="800" Background="{StaticResource BackgroundDark}">
+        Title="PPgram Desktop" MinHeight="640" MinWidth="800" Background="{StaticResource BackgroundDark}"
+        Closed="Window_Closed">
     <Window.DataContext>
         <viewmodel:MainViewModel/>
     </Window.DataContext>

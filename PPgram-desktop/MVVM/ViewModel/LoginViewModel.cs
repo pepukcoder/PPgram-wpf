@@ -52,7 +52,7 @@ class LoginViewModel : INotifyPropertyChanged
             password = Password
         });
     }
-    private void ShowError(string error)
+    public void ShowError(string error)
     {
         Error = error;
         IsError = true;
