@@ -9,6 +9,7 @@ using PPgram_desktop.Net;
 using PPgram_desktop.Core;
 using PPgram_desktop.MVVM.Model;
 using PPgram_desktop.MVVM.View;
+using System.Windows;
 
 namespace PPgram_desktop.MVVM.ViewModel;
 
@@ -96,7 +97,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
         // client events
         client.Authorized += Client_Authorized;
-
+        client.Registered += Client_Registered;
         // authorization
         if (File.Exists(sessionFilePath))
         {
@@ -109,24 +110,33 @@ internal class MainViewModel : INotifyPropertyChanged
             }
             catch (Exception e)
             {
-                // MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
+                MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
             }
         }
         else
         {
-            _sidebarVisible = false;
-            _currentPage = login_p;
+            SidebarVisible = false;
+            CurrentPage = login_p;
         }
     }
 
     #region client handlers
     private void Client_Authorized(object? sender, ResponseAuthEventArgs e)
     {
-        _sidebarVisible = true;
-        _currentPage = chat_p;
-        client.FetchChats();
+        if (e.ok)
+        {
+            // DEBUG
+            MessageBox.Show("auth reached");
+            LoadChat();
+        }
+        else if (!e.ok)
+        {
+            File.Delete(sessionFilePath);
+            SidebarVisible = false;
+            CurrentPage = login_p;
+        }
     }
-    private void Client_MessageRecieved(object? sender, ResponseMessageEventArgs e)
+    private void Client_MessageRecieved(object? sender, IncomeMessageEventArgs e)
     {
         foreach (UserModel chat in Chats)
         {
@@ -138,12 +148,21 @@ internal class MainViewModel : INotifyPropertyChanged
     }
     private void Client_Registered(object? sender, ResponseRegisterEventArgs e)
     {
-        /*
-        if (e.ok != null && e.ok == true)
+        if (e.ok)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(sessionFilePath) ?? string.Empty);
+            using var writer = new StreamWriter(File.OpenWrite(sessionFilePath));
+            writer.WriteLine(e.sessionId);
+            writer.WriteLine(e.userId);
 
+            MessageBox.Show("reg reached");
+            // DEBUG
+            LoadChat();
         }
-        */
+        else if (!e.ok)
+        {
+            reg_vm.ShowError(e.error);
+        }
     }
     #endregion
     private void SettingsButton_Click()
@@ -153,6 +172,12 @@ internal class MainViewModel : INotifyPropertyChanged
     private void NewChat_Enter()
     {
         NewChatName = "";
+    }
+    private void LoadChat()
+    {
+        MessageBox.Show("chat reached");
+        SidebarVisible = true;
+        CurrentPage = chat_p;
     }
 
     #region Login page handlers

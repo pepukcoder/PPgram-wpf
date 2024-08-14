@@ -93,7 +93,7 @@ class RegViewModel : INotifyPropertyChanged
         SendRegister?.Invoke(this, new RegisterEventArgs
         {
             name = Name,
-            username = Username,
+            username = $"@{Username}",
             password = Password,
         });
     }

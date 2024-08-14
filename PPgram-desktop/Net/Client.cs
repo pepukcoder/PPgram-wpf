@@ -14,7 +14,8 @@ class Client
     public event EventHandler<ResponseAuthEventArgs> Authorized;
     public event EventHandler<ResponseLoginEventArgs> LoggedIn;
     public event EventHandler<ResponseRegisterEventArgs> Registered;
-    public event EventHandler<ResponseMessageEventArgs> MessageRecieved;
+
+    public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
     public event EventHandler Disconnected;
 
     private readonly TcpClient client;
@@ -40,7 +41,7 @@ class Client
             }
             catch (Exception e)
             {
-                //MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
+                MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
             }
         }
     }
@@ -66,41 +67,75 @@ class Client
                 if (read_count == 0) break;
 
                 string response = Encoding.UTF8.GetString(responseBytes);
-                MessageBox.Show(response);
+
                 // handle response
                 HandleResponse(response);
             }
             catch (Exception e)
             {
-                // MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
-                Stop();
+                MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
             }
         }
     }
     private void HandleResponse(string response)
     {
+
+        // REFACTOR & CLEANING NEEDED
+
         string? method = JsonNode.Parse(response)?["method"]?.GetValue<string>();
         bool? ok = JsonNode.Parse(response)?["ok"]?.GetValue<bool>();
         string? error = JsonNode.Parse(response)?["error"]?.GetValue<string>();
         switch (method)
         {
             case "login":
-                
                 if (ok == true)
                 {
                     MessageBox.Show(response);
                 }
-                MessageBox.Show(error);
+                else if (ok == false && error != null)
+                {
+                    LoggedIn?.Invoke(this, new ResponseLoginEventArgs
+                    {
+
+                    });
+                }
                 break;
             case "register":
                 if (ok == true)
                 {
                     MessageBox.Show(response);
+                    Registered?.Invoke(this, new ResponseRegisterEventArgs
+                    {
+                        ok = true,
+                        sessionId = JsonNode.Parse(response)?["session_id"]?.GetValue<string>(),
+                        userId = JsonNode.Parse(response)?["user_id"]?.GetValue<int>()
+                    });
                 }
-                MessageBox.Show(error);
+                else if (ok == false && error != null)
+                {
+                    Registered?.Invoke(this, new ResponseRegisterEventArgs
+                    {
+                        ok = false,
+                        error = error
+                    });
+                }
                 break;
             case "auth":
-                
+                if (ok == true)
+                {
+                    Authorized?.Invoke(this, new ResponseAuthEventArgs
+                    {
+                        ok = true
+                    });
+                }
+                else if(ok == false && error != null)
+                {
+                    Authorized?.Invoke(this, new ResponseAuthEventArgs
+                    {
+                        ok = false,
+                        error = error
+                    });
+                }
                 break;
         }
     }
@@ -171,23 +206,27 @@ class Client
     #endregion
 }
 
-class ResponseMessageEventArgs : EventArgs
-{
-    public int? sender_id;
-    public int? receiver_id;
-    public MessageModel? message;
-}
 class ResponseLoginEventArgs : EventArgs
 {
 
 }
 class ResponseRegisterEventArgs : EventArgs
 {
-    public bool? ok;
-    public string? error;
+    public int? userId;
+    public string? sessionId = "";
+
+    public bool ok = false;
+    public string error = "";
 }
 class ResponseAuthEventArgs : EventArgs
 {
-    public int? userId;
-    public int? sessionId;
+    public bool ok = false;
+    public string error = "";
+}
+
+class IncomeMessageEventArgs : EventArgs
+{
+    public int? sender_id;
+    public int? receiver_id;
+    public MessageModel? message;
 }
