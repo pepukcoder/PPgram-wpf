@@ -125,8 +125,6 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         if (e.ok)
         {
-            // DEBUG
-            MessageBox.Show("auth reached");
             LoadChat();
         }
         else if (!e.ok)
@@ -155,8 +153,6 @@ internal class MainViewModel : INotifyPropertyChanged
             writer.WriteLine(e.sessionId);
             writer.WriteLine(e.userId);
 
-            MessageBox.Show("reg reached");
-            // DEBUG
             LoadChat();
         }
         else if (!e.ok)
@@ -175,7 +171,6 @@ internal class MainViewModel : INotifyPropertyChanged
     }
     private void LoadChat()
     {
-        MessageBox.Show("chat reached");
         SidebarVisible = true;
         CurrentPage = chat_p;
     }

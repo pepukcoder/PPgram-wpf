@@ -46,6 +46,13 @@ class LoginViewModel : INotifyPropertyChanged
     }
     private void TryLogin()
     {
+        if (String.IsNullOrWhiteSpace(Login) || String.IsNullOrEmpty(Password))
+        {
+            ShowError("Missing data");
+            return;
+        }
+        Error = "";
+        IsError = false;
         SendLogin?.Invoke(this, new LoginEventArgs
         {
             login = Login,
