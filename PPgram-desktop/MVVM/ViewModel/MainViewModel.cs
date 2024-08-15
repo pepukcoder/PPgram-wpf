@@ -81,7 +81,7 @@ internal class MainViewModel : INotifyPropertyChanged
         login_vm.SendLogin += Login_vm_SendLogin;
         reg_vm.ToLogin += Reg_vm_ToLogin;
         reg_vm.SendRegister += Reg_vm_SendRegister;
-
+        reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
         // connection
         client = new();
         bool connected = false;
@@ -98,6 +98,7 @@ internal class MainViewModel : INotifyPropertyChanged
         // client events
         client.Authorized += Client_Authorized;
         client.Registered += Client_Registered;
+        client.UsernameChecked += Client_UsernameChecked;
         // authorization
         if (File.Exists(sessionFilePath))
         {
@@ -121,6 +122,17 @@ internal class MainViewModel : INotifyPropertyChanged
     }
 
     #region client handlers
+    private void Client_UsernameChecked(object? sender, ResponseUsernameCheckEventArgs e)
+    {
+        if(e.available)
+        {
+            reg_vm.ShowUsernameStatus("This username is available", true);
+        }
+        else if (!e.available)
+        {
+            reg_vm.ShowUsernameStatus("This username is already taken");
+        }
+    }
     private void Client_Authorized(object? sender, ResponseAuthEventArgs e)
     {
         if (e.ok)
@@ -161,6 +173,7 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
     #endregion
+
     private void SettingsButton_Click()
     {
         
@@ -189,6 +202,10 @@ internal class MainViewModel : INotifyPropertyChanged
     private void Reg_vm_SendRegister(object? sender, RegisterEventArgs e)
     {
         client.RegisterNewUser(e.username, e.name, e.password);
+    }
+    private void Reg_vm_SendUsernameCheck(object? sender, CheckUsernameEventArgs e)
+    {
+        client.ChekUsernameAvailable(e.username);
     }
     void Reg_vm_ToLogin(object? sender, EventArgs e)
     {

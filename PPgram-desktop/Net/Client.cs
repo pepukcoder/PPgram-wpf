@@ -2,10 +2,10 @@
 using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Windows;
 
 using PPgram_desktop.MVVM.Model;
 using PPgram_desktop.Net.IO;
-using System.Windows;
 
 namespace PPgram_desktop.Net;
 
@@ -14,6 +14,8 @@ class Client
     public event EventHandler<ResponseAuthEventArgs> Authorized;
     public event EventHandler<ResponseLoginEventArgs> LoggedIn;
     public event EventHandler<ResponseRegisterEventArgs> Registered;
+
+    public event EventHandler<ResponseUsernameCheckEventArgs> UsernameChecked;
 
     public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
     public event EventHandler Disconnected;
@@ -27,7 +29,6 @@ class Client
     }
     public void Connect(string host, int port)
     {
-
         if (!client.Connected)
         {
             try
@@ -47,7 +48,7 @@ class Client
     }
     private void Listen()
     {
-        while (true)
+        while (client.Connected)
         {
             try
             {
@@ -103,7 +104,6 @@ class Client
             case "register":
                 if (ok == true)
                 {
-                    MessageBox.Show(response);
                     Registered?.Invoke(this, new ResponseRegisterEventArgs
                     {
                         ok = true,
@@ -137,6 +137,22 @@ class Client
                     });
                 }
                 break;
+            case "check_username":
+                if (ok == true)
+                {
+                    UsernameChecked?.Invoke(this, new ResponseUsernameCheckEventArgs
+                    {
+                        available = false
+                    });
+                }
+                else if (ok == false)
+                {
+                    UsernameChecked?.Invoke(this, new ResponseUsernameCheckEventArgs
+                    {
+                        available = true
+                    });
+                }
+                break;
         }
     }
     private void Stop()
@@ -148,6 +164,8 @@ class Client
     #region request methods
     public void AuthorizeWithSessionId(string sessionId, int userId)
     {
+        if (!client.Connected)
+            return;
         var data = new
         {
             method = "auth",
@@ -159,6 +177,8 @@ class Client
     }
     public void AuthorizeWithLogin(string login, string password)
     {
+        if (!client.Connected)
+            return;
         var data = new
         {
             method = "login",
@@ -170,6 +190,8 @@ class Client
     }
     public void RegisterNewUser(string newUsername, string newName, string newPassword)
     {
+        if (!client.Connected)
+            return;
         var data = new
         {
             method = "register",
@@ -182,6 +204,8 @@ class Client
     }
     public void SendMessage(MessageModel message)
     {
+        if (!client.Connected)
+            return;
         /*
         var data = new
         {
@@ -193,15 +217,31 @@ class Client
     }
     public void FetchChats()
     {
-
+        if (!client.Connected)
+            return;
     }
     public void FetchUser(string id)
     {
-
+        if (!client.Connected)
+            return;
     }
     public void FetchMessages(string id)
     {
-
+        if (!client.Connected)
+            return;
+    }
+    public void ChekUsernameAvailable(string username)
+    {
+        if (!client.Connected)
+            return;
+        var data = new
+        {
+            method = "fetch",
+            what = "check_username",
+            data = username
+        };
+        string request = JsonSerializer.Serialize(data);
+        stream.Write(RequestBuilder.GetBytes(request));
     }
     #endregion
 }
@@ -222,6 +262,11 @@ class ResponseAuthEventArgs : EventArgs
 {
     public bool ok = false;
     public string error = "";
+}
+
+class ResponseUsernameCheckEventArgs : EventArgs
+{
+    public bool available;
 }
 
 class IncomeMessageEventArgs : EventArgs

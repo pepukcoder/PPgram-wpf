@@ -23,6 +23,6 @@
     <SolidColorBrush x:Key="ButtonHover" Color="#434343"/>
     
     <SolidColorBrush x:Key="InputBack" Color="#131313"/>
-    <SolidColorBrush x:Key="InputSide" Color="#2a2a2a"/>
-
+    <SolidColorBrush x:Key="InputSide" Color="#0f0f0f"/>
+    <SolidColorBrush x:Key="InputIcon" Color="#2a2a2a"/>
 </ResourceDictionary>
