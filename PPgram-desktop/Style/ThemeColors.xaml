@@ -13,7 +13,7 @@
 
     <SolidColorBrush x:Key="BackgroundLight" Color="#0f0f0f"/>
     <SolidColorBrush x:Key="BackgroundDark" Color="#0b0b0b"/>
-
+   
     <SolidColorBrush x:Key="MessageOwn" Color="#2a2a2a"/>
     <SolidColorBrush x:Key="MessageUser" Color="#111111"/>
     <SolidColorBrush x:Key="MessageReplyOwn" Color="#3f3f3f"/>

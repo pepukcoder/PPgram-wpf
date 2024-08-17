@@ -26,22 +26,20 @@ class Client
     {
         client = new();
     }
-    public void Connect(string host, int port)
+    public bool Connect(string host, int port)
     {
-        if (!client.Connected)
+        try
         {
-            try
-            {
-                client.Connect(host, port);
-                stream = client.GetStream();
-                Thread listenThread = new(new ThreadStart(Listen));
-                listenThread.IsBackground = true;
-                listenThread.Start();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
-            }
+            client.Connect(host, port);
+            stream = client.GetStream();
+            Thread listenThread = new(new ThreadStart(Listen));
+            listenThread.IsBackground = true;
+            listenThread.Start();
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
         }
     }
     private void Listen()

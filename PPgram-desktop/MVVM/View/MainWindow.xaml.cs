@@ -1,6 +1,8 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace PPgram_desktop;
 

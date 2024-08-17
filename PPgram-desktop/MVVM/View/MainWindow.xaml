@@ -9,7 +9,9 @@
         xmlns:local="clr-namespace:PPgram_desktop"
         mc:Ignorable="d"
         Title="PPgram Desktop" MinHeight="640" MinWidth="800" Background="{StaticResource BackgroundDark}"
-        Closed="Window_Closed">
+        Closed="Window_Closed"
+        WindowStyle="SingleBorderWindow" WindowChrome.IsHitTestVisibleInChrome="False">
+    
     <Window.DataContext>
         <viewmodel:MainViewModel/>
     </Window.DataContext>
@@ -71,8 +73,7 @@
                           ItemContainerStyle="{StaticResource UserItem}"
                           SelectedItem="{Binding SelectedChat}"
                           SelectedIndex="0"
-                          Padding="0"
-                          >
+                          Padding="0">
                 </ListView>
             </Grid>
         </Border>

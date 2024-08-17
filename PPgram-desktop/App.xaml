@@ -12,7 +12,7 @@
                 
                 <ResourceDictionary Source="Style/Button/ButtonRegular.xaml"/>
                 <ResourceDictionary Source="Style/Button/ButtonIcon.xaml"/>
-                               
+                             
                 <ResourceDictionary Source="Style/Message/MessageOwn.xaml"/>
                 <ResourceDictionary Source="Style/Message/MessageGroup.xaml"/>
                 <ResourceDictionary Source="Style/Message/MessageUser.xaml"/>

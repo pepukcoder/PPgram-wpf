@@ -16,6 +16,7 @@ namespace PPgram_desktop.MVVM.ViewModel;
 internal class MainViewModel : INotifyPropertyChanged
 {
     private readonly string sessionFilePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\session.sesf");
+    private readonly string cachePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\cache\\");
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -82,27 +83,21 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.ToLogin += Reg_vm_ToLogin;
         reg_vm.SendRegister += Reg_vm_SendRegister;
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
+
         // connection
         client = new();
-
-        // REWORK NEEDED
         bool connected = false;
         while (!connected)
         {
-            try
-            {
-                client.Connect("127.0.0.1", 8080);
-                connected = true;
-            }
-            catch { }
+            connected = client.Connect("127.0.0.1", 8080);
         }
-        //-----------------
 
         // client events
         client.Authorized += Client_Authorized;
         client.LoggedIn += Client_LoggedIn;
         client.Registered += Client_Registered;
         client.UsernameChecked += Client_UsernameChecked;
+
         // authorization
         if (File.Exists(sessionFilePath))
         {
@@ -115,7 +110,7 @@ internal class MainViewModel : INotifyPropertyChanged
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
+                MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         else
@@ -152,13 +147,7 @@ internal class MainViewModel : INotifyPropertyChanged
     }
     private void Client_MessageRecieved(object? sender, IncomeMessageEventArgs e)
     {
-        foreach (UserModel chat in Chats)
-        {
-            if (chat.ID == e.sender_id && e.message != null)
-            {
-                chat.Messages.Add(e.message);
-            }
-        }
+        
     }
     private void Client_Registered(object? sender, ResponseRegisterEventArgs e)
     {
@@ -206,6 +195,7 @@ internal class MainViewModel : INotifyPropertyChanged
         writer.WriteLine(sessionId);
         writer.WriteLine(userId);
     }
+
     #region Login page handlers
     private void Login_vm_SendLogin(object? sender, LoginEventArgs e)
     {
