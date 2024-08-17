@@ -241,8 +241,8 @@ class Client
             return;
         var data = new
         {
-            method = "fetch",
-            what = "check_username",
+            method = "check",
+            what = "username",
             data = username
         };
         string request = JsonSerializer.Serialize(data);
