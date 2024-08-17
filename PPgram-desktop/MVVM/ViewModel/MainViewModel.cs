@@ -84,6 +84,8 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
         // connection
         client = new();
+
+        // REWORK NEEDED
         bool connected = false;
         while (!connected)
         {
@@ -94,9 +96,11 @@ internal class MainViewModel : INotifyPropertyChanged
             }
             catch { }
         }
+        //-----------------
 
         // client events
         client.Authorized += Client_Authorized;
+        client.LoggedIn += Client_LoggedIn;
         client.Registered += Client_Registered;
         client.UsernameChecked += Client_UsernameChecked;
         // authorization
@@ -160,16 +164,24 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         if (e.ok)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(sessionFilePath) ?? string.Empty);
-            using var writer = new StreamWriter(File.OpenWrite(sessionFilePath));
-            writer.WriteLine(e.sessionId);
-            writer.WriteLine(e.userId);
-
+            CreateAuthFile(e.sessionId ?? "", e.userId ?? 0);
             LoadChat();
         }
         else if (!e.ok)
         {
             reg_vm.ShowError(e.error);
+        }
+    }
+    private void Client_LoggedIn(object? sender, ResponseLoginEventArgs e)
+    {
+        if (e.ok)
+        {
+            CreateAuthFile(e.sessionId ?? "", e.userId ?? 0);
+            LoadChat();
+        }
+        else if (!e.ok)
+        {
+            login_vm.ShowError(e.error);
         }
     }
     #endregion
@@ -187,7 +199,13 @@ internal class MainViewModel : INotifyPropertyChanged
         SidebarVisible = true;
         CurrentPage = chat_p;
     }
-
+    private void CreateAuthFile(string sessionId, int userId)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(sessionFilePath) ?? string.Empty);
+        using var writer = new StreamWriter(File.OpenWrite(sessionFilePath));
+        writer.WriteLine(sessionId);
+        writer.WriteLine(userId);
+    }
     #region Login page handlers
     private void Login_vm_SendLogin(object? sender, LoginEventArgs e)
     {

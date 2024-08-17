@@ -14,7 +14,6 @@ class Client
     public event EventHandler<ResponseAuthEventArgs> Authorized;
     public event EventHandler<ResponseLoginEventArgs> LoggedIn;
     public event EventHandler<ResponseRegisterEventArgs> Registered;
-
     public event EventHandler<ResponseUsernameCheckEventArgs> UsernameChecked;
 
     public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
@@ -35,7 +34,6 @@ class Client
             {
                 client.Connect(host, port);
                 stream = client.GetStream();
-
                 Thread listenThread = new(new ThreadStart(Listen));
                 listenThread.IsBackground = true;
                 listenThread.Start();
@@ -89,15 +87,22 @@ class Client
         switch (method)
         {
             case "login":
+                MessageBox.Show(response);
                 if (ok == true)
                 {
-                    MessageBox.Show(response);
+                    LoggedIn?.Invoke(this, new ResponseLoginEventArgs
+                    {
+                        ok = true,
+                        sessionId = JsonNode.Parse(response)?["session_id"]?.GetValue<string>(),
+                        userId = JsonNode.Parse(response)?["user_id"]?.GetValue<int>()
+                    });
                 }
                 else if (ok == false && error != null)
                 {
                     LoggedIn?.Invoke(this, new ResponseLoginEventArgs
                     {
-
+                        ok = false,
+                        error = error
                     });
                 }
                 break;
@@ -248,7 +253,11 @@ class Client
 
 class ResponseLoginEventArgs : EventArgs
 {
+    public int? userId;
+    public string? sessionId = "";
 
+    public bool ok = false;
+    public string error = "";
 }
 class ResponseRegisterEventArgs : EventArgs
 {
@@ -268,7 +277,6 @@ class ResponseUsernameCheckEventArgs : EventArgs
 {
     public bool available;
 }
-
 class IncomeMessageEventArgs : EventArgs
 {
     public int? sender_id;

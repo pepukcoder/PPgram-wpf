@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -142,7 +141,7 @@ class RegViewModel : INotifyPropertyChanged
     {
         if (!String.IsNullOrEmpty(Password))
         {
-            if (Password.Length >= 8 && Password.Length <= 25)
+            if (Password.Length >= 8 && Password.Length <= 28)
             {
                 PassOk = true;
                 PassError = false;

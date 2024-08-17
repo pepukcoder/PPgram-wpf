@@ -38,7 +38,7 @@
                         <TextBox x:Name="TextBox_Name" Margin="0,0,8,0" MinWidth ="250" BorderThickness="0" 
                                  TextAlignment="Left"
                                  FontSize="14" VerticalContentAlignment="Center" 
-                                 MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                                 MaxLength="30" Foreground="{StaticResource SecondaryText}" 
                                  Background="Transparent" CaretBrush="White" 
                                  SelectionBrush="{StaticResource TextSelection}"
                                  Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontFamily="Cascadia Mono Light">
@@ -60,7 +60,7 @@
                             <TextBox x:Name="TextBox_Username" Margin="0,0,8,0" MinWidth="250" BorderThickness="0" 
                                      TextAlignment="Left"
                                      FontSize="14" VerticalContentAlignment="Center" 
-                                     MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                                     MaxLength="30" Foreground="{StaticResource SecondaryText}" 
                                      Background="Transparent" CaretBrush="White" 
                                      SelectionBrush="{StaticResource TextSelection}"
                                      Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
@@ -80,7 +80,7 @@
                 <TextBlock FontStyle="Normal" Text="Create your password" 
                            HorizontalAlignment="Left" Foreground="{StaticResource SecondaryText}"
                            FontWeight="SemiBold" Margin="0,0,0,5"/>
-                <TextBlock FontStyle="Normal" Text="Length 8-25 characters"
+                <TextBlock FontStyle="Normal" Text="Length 8-28 characters"
                            HorizontalAlignment="Left" Foreground="{StaticResource ButtonIdle}"
                            FontWeight="SemiBold" Margin="0,0,0,5">
                 </TextBlock>
@@ -99,7 +99,7 @@
                         </Border>
                         <PasswordBox x:Name="TextBox_Password" Margin="8,0,8,0" MinWidth="250" BorderThickness="0" HorizontalAlignment="Stretch" 
                                          FontSize="14" VerticalContentAlignment="Center" 
-                                         MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                                         MaxLength="28" Foreground="{StaticResource SecondaryText}" 
                                          Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
                                          PasswordChanged="TextBox_Password_PasswordChanged">
                         </PasswordBox>
@@ -123,7 +123,7 @@
                         </Border>
                         <PasswordBox x:Name="TextBox_PasswordRepeat" Margin="8,0,8,0" MinWidth="250" BorderThickness="0" 
                                     FontSize="14" VerticalContentAlignment="Center"
-                                    MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                                    MaxLength="28" Foreground="{StaticResource SecondaryText}" 
                                     Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
                                     PasswordChanged="TextBox_PasswordRepeat_PasswordChanged">
                         </PasswordBox>
