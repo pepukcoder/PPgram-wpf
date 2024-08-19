@@ -85,7 +85,6 @@ class Client
         switch (method)
         {
             case "login":
-                MessageBox.Show(response);
                 if (ok == true)
                 {
                     LoggedIn?.Invoke(this, new ResponseLoginEventArgs

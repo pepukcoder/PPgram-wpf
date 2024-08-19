@@ -26,7 +26,7 @@ class RegViewModel : INotifyPropertyChanged
     public string Password
     {
         get { return _password; }
-        set { _password = value; ValidatePassword(); }
+        set { _password = value; ValidatePassword(); ValidatePasswordConfirm(); }
     }
     private string _confirmPassword = "";
     public string ConfirmPassword

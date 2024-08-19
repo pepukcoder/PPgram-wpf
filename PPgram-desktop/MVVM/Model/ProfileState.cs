@@ -10,4 +10,5 @@ internal sealed class ProfileState
     public string Username { get; set; } = "";
     public string AvatarSource { get; set; } = "";
     public string Id { get; set; } = "";
+
 }

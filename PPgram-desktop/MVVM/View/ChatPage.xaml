@@ -4,42 +4,129 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:Icon="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+      xmlns:core="clr-namespace:PPgram_desktop.Core"
       xmlns:viewmodel="clr-namespace:PPgram_desktop.MVVM.ViewModel"
       xmlns:local="clr-namespace:PPgram_desktop.MVVM.View"
       mc:Ignorable="d" 
       MinHeight="400" MinWidth="500"
-      Title="ChatPage">
+      Title="ChatPage"
+      FontFamily="Montserrat">
     <Page.DataContext>
         <viewmodel:ChatViewModel/>
     </Page.DataContext>
-    
+    <Page.Resources>
+        <core:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Page.Resources>
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0">
+        
+        <!--Sidebar-->
+        <Border Grid.Column="0" Grid.RowSpan="3" Background="{StaticResource BackgroundLight}" 
+                Visibility="{Binding SidebarVisible, Converter={StaticResource BoolToVisibilityConverter}}" Width="260">
+            <Grid Margin="8,0,8,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <DockPanel Grid.Row="0" HorizontalAlignment="Stretch"
+                        Margin="0,8,0,0" Height="50">
+                        <Ellipse Width="40" Height="40" VerticalAlignment="Center" DockPanel.Dock="Left">
+                            <Ellipse.Fill>
+                                <ImageBrush ImageSource="{Binding AvatarSource}"/>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <StackPanel Orientation="Vertical" MaxWidth="164" VerticalAlignment="Center" Margin="8,0,8,0">
+                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" Foreground="{StaticResource PrimaryText}" FontSize="14" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Username}" TextTrimming="CharacterEllipsis" Foreground="{StaticResource SecondaryText}" FontSize="14" FontFamily="Cascadia Mono Light" Margin="0,3,0,0"/>
+                        </StackPanel>
+                        <Button DockPanel.Dock="Right" HorizontalAlignment="Right" 
+                        Command="{Binding SettingsButtonCommand}" 
+                        Background="Transparent" Height="24" Width="24"
+                        Style="{StaticResource IconButton}" VerticalAlignment="Center">
+                            <Icon:MaterialIcon Kind="Cog" VerticalAlignment="Center"/>
+                        </Button>
+                    </DockPanel>
+                    <Border Grid.Row="0" Height="2" Background="{StaticResource BackgroundDark}" Margin="10"/>
+                    <Border CornerRadius="5" Height="30" HorizontalAlignment="Stretch" Background="{StaticResource UserHighlight}" Margin="0,0,0,10">
+                        <StackPanel x:Name="NewChatBar" Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Icon:MaterialIcon Kind="AccountPlus" Width="24" Margin="8,0,8,0" Foreground="{StaticResource UserSelected}"/>
+                            <TextBox x:Name="NewChatTextBox" Margin="0" Width ="200" BorderThickness="0" 
+                             TextAlignment="Left" FontSize="14" VerticalContentAlignment="Center" 
+                             MaxLength="25" Foreground="{StaticResource SecondaryText}" 
+                             Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
+                             FontFamily="Cascadia Mono Light"
+                             Text="{Binding NewChatName, UpdateSourceTrigger=PropertyChanged}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Command="{Binding NewChatCommand}" Key="Return"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+                <ListView Grid.Row="1"
+                  VerticalAlignment="Stretch"
+                  ItemsSource="{Binding Chats}"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                  ItemContainerStyle="{StaticResource UserItem}"
+                  SelectedItem="{Binding SelectedChat}"
+                  SelectedIndex="0"
+                  Padding="0">
+                </ListView>
+            </Grid>
+        </Border>
+
+        <!--Chat info-->
+        <StackPanel Grid.Row="0" Grid.Column="1">
             <DockPanel Grid.Row="0" Margin="0,8,0,0" Height="50">
-                <Ellipse Width="40" Height="40" Margin="8,0,0,0" VerticalAlignment="Center">
-                    <Ellipse.Fill>
-                        <SolidColorBrush Color="White"/>
-                    </Ellipse.Fill>
-                </Ellipse>
+                <Button Width="40" Height="40" Margin="8,0,0,0" Style="{StaticResource IconButton}"
+                        Command="{Binding ShowProfileCommand}" DockPanel.Dock="Left">
+                    <Ellipse Width="40" Height="40">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="{Binding AvatarSource}"/>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                </Button>
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="8,0,8,0">
-                    <TextBlock Text="Pavlo" Foreground="{StaticResource PrimaryText}" FontSize="14" FontWeight="SemiBold" FontFamily="Montserrat"/>
-                    <TextBlock Text="@pavlo1010" Foreground="{StaticResource SecondaryText}" FontSize="14" FontFamily="Montserrat" Margin="0,3,0,0"/>
+                    <TextBlock Text="{Binding Name}" MaxWidth="350" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" Foreground="{StaticResource PrimaryText}" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Username}" MaxWidth="350" Foreground="{StaticResource SecondaryText}" FontSize="14" Margin="0,3,0,0" FontFamily="Cascadia Mono Light"/>
                 </StackPanel>
                 <Button x:Name="ChatSettingsButton" Command="{Binding SettingsButtonCommand}"
                         Height="24" Style="{StaticResource IconButton}" VerticalAlignment="Center"
-                        HorizontalAlignment="Right" Margin="8,0,8,0">
+                        HorizontalAlignment="Right" Margin="8,0,8,0" DockPanel.Dock="Right">
                     <Icon:MaterialIcon Kind="DotsVertical" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
             </DockPanel>
             <Border Grid.Row="0" Height="2" Background="{StaticResource BackgroundLight}" Margin="10"/>
         </StackPanel>
 
-        <Border Grid.Row="2"  CornerRadius="15" MinHeight="30" HorizontalAlignment="Stretch" Background="{StaticResource BackgroundLight}" Margin="10">
+        <!--Chat messages-->
+        <ListView Grid.Row="1" Grid.Column="1"
+                  Margin="10,0,10,0"
+                  VerticalAlignment="Stretch"
+                  ItemsSource="{Binding ChatMessages}"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                  ItemContainerStyle="{StaticResource MessageItem}"
+                  SelectedItem="{Binding SelectedMessage}"
+                  SelectedIndex="0">
+        </ListView>
+        
+        <!--Input area-->
+        <Border Grid.Row="2" Grid.Column="1" CornerRadius="15" MinHeight="30" HorizontalAlignment="Stretch" Background="{StaticResource BackgroundLight}" Margin="10">
             <DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
                 <Button x:Name="AttachmentButton" Command="" Margin="3,0,0,3"
                     Background="Transparent" Foreground="{StaticResource UserSelected}" 
@@ -48,34 +135,21 @@
                     <Icon:MaterialIcon Kind="Paperclip" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
                 <Button x:Name="SendButton" Margin="0,0,3,3"
-                    Background="Transparent" Foreground="{StaticResource UserSelected}" 
-                    Height="24" Style="{StaticResource RegularButton}" 
-                    VerticalAlignment="Bottom" DockPanel.Dock="Right" HorizontalAlignment="Right"
-                    Command="{Binding SendMessageCommand}">
+                        Background="Transparent" Foreground="{StaticResource UserSelected}" 
+                        Height="24" Style="{StaticResource RegularButton}" 
+                        VerticalAlignment="Bottom" DockPanel.Dock="Right" HorizontalAlignment="Right"
+                        Command="{Binding SendMessageCommand}">
                     <Icon:MaterialIcon Kind="Send" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
                 <TextBox x:Name="MessageInputBox" BorderThickness="0"
-                     TextAlignment="Left" FontFamily="Montserrat" 
-                     FontSize="14" VerticalContentAlignment="Center" 
-                     Foreground="{StaticResource PrimaryText}" 
-                     Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
-                     HorizontalAlignment="Stretch" Margin="4,0,4,0" TextWrapping="Wrap" AcceptsReturn="True" MaxLines="20"
-                     Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}">
+                         TextAlignment="Left" FontFamily="Montserrat" 
+                         FontSize="14" VerticalContentAlignment="Center" 
+                         Foreground="{StaticResource PrimaryText}" 
+                         Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
+                         HorizontalAlignment="Stretch" Margin="4,0,4,0" TextWrapping="Wrap" AcceptsReturn="True" MaxLines="20"
+                         Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}">
                 </TextBox>
             </DockPanel>
         </Border>
-
-        <ListView Grid.Row="1"
-              Margin="10,0,10,0"
-              VerticalAlignment="Stretch"
-              ItemsSource="{Binding ChatMessages}"
-              BorderThickness="0"
-              Background="Transparent"
-              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-              ScrollViewer.VerticalScrollBarVisibility="Hidden"
-              ItemContainerStyle="{StaticResource MessageItem}"
-              SelectedItem="{Binding SelectedMessage}"
-              SelectedIndex="0">
-        </ListView>
     </Grid>
 </Page>

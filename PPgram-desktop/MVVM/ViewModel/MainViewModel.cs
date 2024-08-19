@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 using System.IO;
 using System.Windows.Controls;
@@ -9,7 +10,6 @@ using PPgram_desktop.Net;
 using PPgram_desktop.Core;
 using PPgram_desktop.MVVM.Model;
 using PPgram_desktop.MVVM.View;
-using System.Windows;
 
 namespace PPgram_desktop.MVVM.ViewModel;
 
@@ -21,20 +21,6 @@ internal class MainViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     #region bindings
-    public ObservableCollection<UserModel> Chats { get; set; }
-    public UserModel SelectedChat { get; set; }
-    private string _newChatName;
-    public string NewChatName
-    {
-        get { return _newChatName; }
-        set { _newChatName = value; OnPropertyChanged(); }
-    }
-    private bool _sidebarVisible;
-    public bool SidebarVisible
-    {
-        get { return _sidebarVisible; }
-        set { _sidebarVisible = value; OnPropertyChanged(); }
-    }
     private Page _currentPage;
     public Page CurrentPage
     {
@@ -51,31 +37,18 @@ internal class MainViewModel : INotifyPropertyChanged
     private SettingsPage settings_p = new();
     private SettingsViewModel settings_vm = new();
     private ChatPage chat_p = new();
-    #endregion
-
-    #region commands
-    public ICommand SettingsButtonCommand { get; set; }
-    public ICommand NewChatCommand { get; set; }
+    private ChatViewModel chat_vm = new();
     #endregion
 
     private readonly Client client;
 
     public MainViewModel()
     {
-        // commands
-        SettingsButtonCommand = new RelayCommand(o => SettingsButton_Click());
-        NewChatCommand = new RelayCommand(o => NewChat_Enter());
-
-        // sidebar
-        _newChatName = "";
-        SelectedChat = new();
-        Chats = [];
-
         // pages
         login_p.DataContext = login_vm;
         reg_p.DataContext = reg_vm;
         settings_p.DataContext = settings_vm;
-        chat_p.DataContext = this;
+        chat_p.DataContext = chat_vm;
 
         // pages events
         login_vm.ToReg += Login_vm_ToReg;
@@ -115,7 +88,6 @@ internal class MainViewModel : INotifyPropertyChanged
         }
         else
         {
-            SidebarVisible = false;
             CurrentPage = login_p;
         }
     }
@@ -141,7 +113,6 @@ internal class MainViewModel : INotifyPropertyChanged
         else if (!e.ok)
         {
             File.Delete(sessionFilePath);
-            SidebarVisible = false;
             CurrentPage = login_p;
         }
     }
@@ -158,7 +129,7 @@ internal class MainViewModel : INotifyPropertyChanged
         }
         else if (!e.ok)
         {
-            reg_vm.ShowError(e.error);
+            reg_vm.ShowError("Something went wrong");
         }
     }
     private void Client_LoggedIn(object? sender, ResponseLoginEventArgs e)
@@ -170,30 +141,21 @@ internal class MainViewModel : INotifyPropertyChanged
         }
         else if (!e.ok)
         {
-            login_vm.ShowError(e.error);
+            login_vm.ShowError("Wrong login or password");
         }
     }
     #endregion
-
-    private void SettingsButton_Click()
-    {
-        
-    }
-    private void NewChat_Enter()
-    {
-        NewChatName = "";
-    }
-    private void LoadChat()
-    {
-        SidebarVisible = true;
-        CurrentPage = chat_p;
-    }
+    
     private void CreateAuthFile(string sessionId, int userId)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(sessionFilePath) ?? string.Empty);
         using var writer = new StreamWriter(File.OpenWrite(sessionFilePath));
         writer.WriteLine(sessionId);
         writer.WriteLine(userId);
+    }
+    private void LoadChat()
+    {
+        CurrentPage = chat_p;
     }
 
     #region Login page handlers
@@ -206,6 +168,7 @@ internal class MainViewModel : INotifyPropertyChanged
         CurrentPage = reg_p;
     }
     #endregion
+
     #region Register page handlers
     private void Reg_vm_SendRegister(object? sender, RegisterEventArgs e)
     {
@@ -215,7 +178,7 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         client.ChekUsernameAvailable(e.username);
     }
-    void Reg_vm_ToLogin(object? sender, EventArgs e)
+    private void Reg_vm_ToLogin(object? sender, EventArgs e)
     {
         CurrentPage = login_p;
     }
