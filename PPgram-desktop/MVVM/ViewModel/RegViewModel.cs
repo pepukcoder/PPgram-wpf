@@ -178,7 +178,7 @@ class RegViewModel : INotifyPropertyChanged
         _timer.Stop();
         SendUsernameCheck?.Invoke(this, new CheckUsernameEventArgs
         {
-            username = Username
+            username = $"@{Username}"
         });
     }
     private void TryRegister()

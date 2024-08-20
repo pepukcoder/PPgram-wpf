@@ -86,6 +86,9 @@ class ChatViewModel : INotifyPropertyChanged
     //public ICommand DownloadFileCommand { get; set; }
     #endregion
 
+    private ProfileState profile = ProfileState.Instance;
+    private ChatState chat = ChatState.Instance; 
+
     public ChatViewModel()
     {
         // commands
@@ -139,6 +142,17 @@ class ChatViewModel : INotifyPropertyChanged
 
     }
     private void DownloadFile()
+    {
+
+    }
+
+    public void UpdateProfile()
+    {
+        Name = profile.Name;
+        Username = profile.Username;
+        AvatarSource = profile.AvatarSource;
+    }
+    public void UpdateChat()
     {
 
     }

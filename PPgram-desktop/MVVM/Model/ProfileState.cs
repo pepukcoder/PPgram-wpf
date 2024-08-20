@@ -6,9 +6,9 @@ internal sealed class ProfileState
     public static ProfileState Instance => lazy.Value;
     private ProfileState() { }
 
-    public string Name { get; set; } = "";
-    public string Username { get; set; } = "";
-    public string AvatarSource { get; set; } = "";
-    public string Id { get; set; } = "";
+    public string Name { get; set; }
+    public string Username { get; set; }
+    public string AvatarSource { get; set; }
+    public int Id { get; set; }
 
 }

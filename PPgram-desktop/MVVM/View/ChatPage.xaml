@@ -94,13 +94,13 @@
                         Command="{Binding ShowProfileCommand}" DockPanel.Dock="Left">
                     <Ellipse Width="40" Height="40">
                         <Ellipse.Fill>
-                            <ImageBrush ImageSource="{Binding AvatarSource}"/>
+                            <ImageBrush ImageSource="{Binding ChatAvatarSource}"/>
                         </Ellipse.Fill>
                     </Ellipse>
                 </Button>
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="8,0,8,0">
-                    <TextBlock Text="{Binding Name}" MaxWidth="350" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" Foreground="{StaticResource PrimaryText}" FontSize="14" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding Username}" MaxWidth="350" Foreground="{StaticResource SecondaryText}" FontSize="14" Margin="0,3,0,0" FontFamily="Cascadia Mono Light"/>
+                    <TextBlock Text="{Binding ChatName}" MaxWidth="350" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" Foreground="{StaticResource PrimaryText}" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ChatUsername}" MaxWidth="350" Foreground="{StaticResource SecondaryText}" FontSize="14" Margin="0,3,0,0" FontFamily="Cascadia Mono Light"/>
                 </StackPanel>
                 <Button x:Name="ChatSettingsButton" Command="{Binding SettingsButtonCommand}"
                         Height="24" Style="{StaticResource IconButton}" VerticalAlignment="Center"

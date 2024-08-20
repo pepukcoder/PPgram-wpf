@@ -41,6 +41,8 @@ internal class MainViewModel : INotifyPropertyChanged
     #endregion
 
     private readonly Client client;
+    private ProfileState profile = ProfileState.Instance;
+    private ChatState chat = ChatState.Instance;
 
     public MainViewModel()
     {
@@ -57,6 +59,8 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.SendRegister += Reg_vm_SendRegister;
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
 
+        CurrentPage = login_p;
+
         // connection
         client = new();
         bool connected = false;
@@ -70,6 +74,7 @@ internal class MainViewModel : INotifyPropertyChanged
         client.LoggedIn += Client_LoggedIn;
         client.Registered += Client_Registered;
         client.UsernameChecked += Client_UsernameChecked;
+        client.SelfFetched += Client_SelfFetched;
 
         // authorization
         if (File.Exists(sessionFilePath))
@@ -86,13 +91,33 @@ internal class MainViewModel : INotifyPropertyChanged
                 MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        else
-        {
-            CurrentPage = login_p;
-        }
     }
 
     #region client handlers
+    private void Client_SelfFetched(object? sender, ResponseFetchUserEventArgs e)
+    {
+        if (e.ok)
+        {
+            if (String.IsNullOrEmpty(e.avatarData))
+            {
+                profile.AvatarSource = "Asset/default_avatar.png";
+            }
+            else
+            {
+                string avatarPath = cachePath + e.username + e.avatarFormat;
+                CreateFile(avatarPath, e.avatarData);
+                profile.AvatarSource = avatarPath;
+            }
+            profile.Name = e.name ?? "";
+            profile.Username = e.username ?? "";
+            profile.Id = e.userId ?? 0;
+            chat_vm.UpdateProfile();
+        }
+        else if (!e.ok)
+        {
+            // Implemention of errors in mainwindow soon
+        }
+    }
     private void Client_UsernameChecked(object? sender, ResponseUsernameCheckEventArgs e)
     {
         if(e.available)
@@ -115,10 +140,6 @@ internal class MainViewModel : INotifyPropertyChanged
             File.Delete(sessionFilePath);
             CurrentPage = login_p;
         }
-    }
-    private void Client_MessageRecieved(object? sender, IncomeMessageEventArgs e)
-    {
-        
     }
     private void Client_Registered(object? sender, ResponseRegisterEventArgs e)
     {
@@ -148,14 +169,19 @@ internal class MainViewModel : INotifyPropertyChanged
     
     private void CreateAuthFile(string sessionId, int userId)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(sessionFilePath) ?? string.Empty);
-        using var writer = new StreamWriter(File.OpenWrite(sessionFilePath));
-        writer.WriteLine(sessionId);
-        writer.WriteLine(userId);
+        string sesdata = sessionId + Environment.NewLine + userId;
+        CreateFile(sessionFilePath, sesdata);
+    }
+    private void CreateFile(string path, string data)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path) ?? string.Empty);
+        using var writer = new StreamWriter(File.OpenWrite(path));
+        writer.Write(data);
     }
     private void LoadChat()
     {
         CurrentPage = chat_p;
+        client.FetchSelf();
     }
 
     #region Login page handlers

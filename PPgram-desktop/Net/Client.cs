@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Buffers.Text;
 using System.Windows;
 
 using PPgram_desktop.MVVM.Model;
@@ -15,8 +16,10 @@ class Client
     public event EventHandler<ResponseLoginEventArgs> LoggedIn;
     public event EventHandler<ResponseRegisterEventArgs> Registered;
     public event EventHandler<ResponseUsernameCheckEventArgs> UsernameChecked;
+    public event EventHandler<ResponseFetchUserEventArgs> SelfFetched;
 
-    public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
+    //public event EventHandler<ResponseFetchUserEventArgs> UserFetched;
+    //public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
     public event EventHandler Disconnected;
 
     private readonly TcpClient client;
@@ -71,6 +74,7 @@ class Client
             catch (Exception e)
             {
                 MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
+                Stop();
             }
         }
     }
@@ -78,10 +82,11 @@ class Client
     {
 
         // REFACTOR & CLEANING NEEDED
+        JsonNode? rootNode = JsonNode.Parse(response);
 
-        string? method = JsonNode.Parse(response)?["method"]?.GetValue<string>();
-        bool? ok = JsonNode.Parse(response)?["ok"]?.GetValue<bool>();
-        string? error = JsonNode.Parse(response)?["error"]?.GetValue<string>();
+        string? method = rootNode?["method"]?.GetValue<string>();
+        bool? ok = rootNode?["ok"]?.GetValue<bool>();
+        string? r_error = rootNode?["error"]?.GetValue<string>();
         switch (method)
         {
             case "login":
@@ -90,35 +95,36 @@ class Client
                     LoggedIn?.Invoke(this, new ResponseLoginEventArgs
                     {
                         ok = true,
-                        sessionId = JsonNode.Parse(response)?["session_id"]?.GetValue<string>(),
-                        userId = JsonNode.Parse(response)?["user_id"]?.GetValue<int>()
+                        sessionId = rootNode?["session_id"]?.GetValue<string>(),
+                        userId = rootNode?["user_id"]?.GetValue<int>()
                     });
                 }
-                else if (ok == false && error != null)
+                else if (ok == false && r_error != null)
                 {
                     LoggedIn?.Invoke(this, new ResponseLoginEventArgs
                     {
                         ok = false,
-                        error = error
+                        error = r_error
                     });
                 }
                 break;
             case "register":
+                MessageBox.Show(response);
                 if (ok == true)
                 {
                     Registered?.Invoke(this, new ResponseRegisterEventArgs
                     {
                         ok = true,
-                        sessionId = JsonNode.Parse(response)?["session_id"]?.GetValue<string>(),
-                        userId = JsonNode.Parse(response)?["user_id"]?.GetValue<int>()
+                        sessionId = rootNode?["session_id"]?.GetValue<string>(),
+                        userId = rootNode?["user_id"]?.GetValue<int>()
                     });
                 }
-                else if (ok == false && error != null)
+                else if (ok == false && r_error != null)
                 {
                     Registered?.Invoke(this, new ResponseRegisterEventArgs
                     {
                         ok = false,
-                        error = error
+                        error = r_error
                     });
                 }
                 break;
@@ -130,12 +136,12 @@ class Client
                         ok = true
                     });
                 }
-                else if(ok == false && error != null)
+                else if(ok == false && r_error != null)
                 {
                     Authorized?.Invoke(this, new ResponseAuthEventArgs
                     {
                         ok = false,
-                        error = error
+                        error = r_error
                     });
                 }
                 break;
@@ -155,45 +161,67 @@ class Client
                     });
                 }
                 break;
+            case "fetch_self":
+                if (true) // Pavlo forgot to add { "ok": true } in json so this is for DEBUG
+                {
+                    JsonNode? userNode = rootNode?["response"];
+                    SelfFetched?.Invoke(this, new ResponseFetchUserEventArgs
+                    {
+                        ok = true,
+                        name = userNode?["name"]?.GetValue<string>(),
+                        username = userNode?["username"]?.GetValue<string>(),
+                        userId = userNode?["user_id"]?.GetValue<int>(),
+                        avatarFormat = userNode?["avatar_format"]?.GetValue<string>(),
+                        avatarData = userNode?["avatar_data"]?.GetValue<string>()
+                    });
+                }
+                if (ok == false && r_error != null)
+                {
+                    SelfFetched?.Invoke(this, new ResponseFetchUserEventArgs
+                    {
+                        ok = false,
+                        error = r_error
+                    });
+                }
+                break;
         }
+    }
+    private void Send(object data)
+    {
+        if (!client.Connected)
+            return;
+        string request = JsonSerializer.Serialize(data);
+        stream.Write(RequestBuilder.GetBytes(request));
     }
     private void Stop()
     {
         Disconnected?.Invoke(this, new EventArgs());
-        stream.Close();
+        stream.Dispose();
         client.Close();
     }
     #region request methods
     public void AuthorizeWithSessionId(string sessionId, int userId)
-    {
-        if (!client.Connected)
-            return;
+    { 
         var data = new
         {
             method = "auth",
             user_id = userId,
             session_id = sessionId,
         };
-        string request = JsonSerializer.Serialize(data);
-        stream.Write(RequestBuilder.GetBytes(request));
+        Send(data);
     }
     public void AuthorizeWithLogin(string login, string password)
     {
-        if (!client.Connected)
-            return;
         var data = new
         {
             method = "login",
             username = login,
             password_hash = password
         };
-        string request = JsonSerializer.Serialize(data);
-        stream.Write(RequestBuilder.GetBytes(request));
+        Send(data);
     }
     public void RegisterNewUser(string newUsername, string newName, string newPassword)
     {
-        if (!client.Connected)
-            return;
         var data = new
         {
             method = "register",
@@ -201,49 +229,49 @@ class Client
             name = newName,
             password_hash = newPassword
         };
-        string request = JsonSerializer.Serialize(data);
-        stream.Write(RequestBuilder.GetBytes(request));
-    }
-    public void SendMessage(MessageModel message)
-    {
-        if (!client.Connected)
-            return;
-        /*
-        var data = new
-        {
-            method = "",
-        };
-        string request = JsonSerializer.Serialize(data);
-        stream.Write(RequestBuilder.GetBytes(request));
-        */
-    }
-    public void FetchChats()
-    {
-        if (!client.Connected)
-            return;
-    }
-    public void FetchUser(string id)
-    {
-        if (!client.Connected)
-            return;
-    }
-    public void FetchMessages(string id)
-    {
-        if (!client.Connected)
-            return;
+        Send(data);
     }
     public void ChekUsernameAvailable(string username)
     {
-        if (!client.Connected)
-            return;
         var data = new
         {
             method = "check",
             what = "username",
             data = username
         };
-        string request = JsonSerializer.Serialize(data);
-        stream.Write(RequestBuilder.GetBytes(request));
+        Send(data);
+    }
+    public void FetchSelf()
+    {
+        var data = new
+        {
+            method = "fetch",
+            what = "self"
+        };
+        Send(data);
+    }
+
+    public void FetchChats()
+    {
+
+    }
+    public void FetchUser(string id)
+    {
+
+    }
+    public void FetchMessages(string id)
+    {
+
+    }
+    public void SendMessage(MessageModel message)
+    {
+        /*
+        var data = new
+        {
+            method = "",
+        };
+        Send(data);
+        */
     }
     #endregion
 }
@@ -251,29 +279,40 @@ class Client
 class ResponseLoginEventArgs : EventArgs
 {
     public int? userId;
-    public string? sessionId = "";
+    public string? sessionId;
 
-    public bool ok = false;
-    public string error = "";
+    public bool ok;
+    public string error;
 }
 class ResponseRegisterEventArgs : EventArgs
 {
     public int? userId;
-    public string? sessionId = "";
+    public string? sessionId;
 
-    public bool ok = false;
-    public string error = "";
+    public bool ok;
+    public string error;
 }
 class ResponseAuthEventArgs : EventArgs
 {
-    public bool ok = false;
-    public string error = "";
+    public bool ok;
+    public string error;
 }
-
 class ResponseUsernameCheckEventArgs : EventArgs
 {
     public bool available;
 }
+class ResponseFetchUserEventArgs : EventArgs
+{
+    public string? name;
+    public string? username;
+    public int? userId;
+    public string? avatarFormat;
+    public string? avatarData;
+
+    public bool ok;
+    public string error;
+}
+
 class IncomeMessageEventArgs : EventArgs
 {
     public int? sender_id;

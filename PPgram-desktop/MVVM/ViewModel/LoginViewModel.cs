@@ -55,7 +55,7 @@ class LoginViewModel : INotifyPropertyChanged
         IsError = false;
         SendLogin?.Invoke(this, new LoginEventArgs
         {
-            login = Login,
+            login = $"@{Login}",
             password = Password
         });
     }
