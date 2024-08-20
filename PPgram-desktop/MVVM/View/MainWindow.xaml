@@ -22,5 +22,21 @@
 
     <Grid>
         <Frame Grid.Column="1" x:Name="MainFrame" Content="{Binding CurrentPage}" NavigationUIVisibility="Hidden" Navigated="MainFrame_Navigated"/>
+        <Border Background="{StaticResource UserSelected}"
+                Margin="10" CornerRadius="15"
+                VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Height="Auto" Visibility="{Binding IsError, Converter={StaticResource BoolToVisibilityConverter}}"
+                Canvas.ZIndex="1" >
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <Icon:MaterialIcon Kind="AlertCircle" Height="24" Margin="0,0,5,0" Foreground="{StaticResource PrimaryText}"/>
+                <TextBlock Text="{Binding Error}"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Right"
+                    Foreground="White"
+                    FontSize="14" TextTrimming="CharacterEllipsis"
+                    DockPanel.Dock="Left"/>
+            </StackPanel>
+            
+        </Border>
     </Grid>
 </Window>

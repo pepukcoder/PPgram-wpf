@@ -27,6 +27,19 @@ internal class MainViewModel : INotifyPropertyChanged
         get { return _currentPage; }
         set { _currentPage = value; OnPropertyChanged(); }
     }
+
+    private bool _isError;
+    public bool IsError
+    {
+        get { return _isError; }
+        set { _isError = value; OnPropertyChanged(); }
+    }
+    private string _error;
+    public string Error
+    {
+        get { return _error; }
+        set { _error = value; OnPropertyChanged(); }
+    }
     #endregion
 
     #region pages
@@ -60,7 +73,6 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
 
         CurrentPage = login_p;
-
         // connection
         client = new();
         bool connected = false;
@@ -86,9 +98,9 @@ internal class MainViewModel : INotifyPropertyChanged
                 int user_id = Int32.Parse(lines[1]);
                 client.AuthorizeWithSessionId(session_id, user_id);
             }
-            catch (Exception e)
+            catch
             {
-                MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError("Unable to create session file");
             }
         }
     }
@@ -115,7 +127,7 @@ internal class MainViewModel : INotifyPropertyChanged
         }
         else if (!e.ok)
         {
-            // Implemention of errors in mainwindow soon
+            ShowError("Unable to fetch profile");
         }
     }
     private void Client_UsernameChecked(object? sender, ResponseUsernameCheckEventArgs e)
@@ -183,6 +195,12 @@ internal class MainViewModel : INotifyPropertyChanged
         CurrentPage = chat_p;
         client.FetchSelf();
     }
+    private void ShowError(string error)
+    {
+        Error = error;
+        IsError = error != "";
+    }
+
 
     #region Login page handlers
     private void Login_vm_SendLogin(object? sender, LoginEventArgs e)
