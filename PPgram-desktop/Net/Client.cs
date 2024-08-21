@@ -76,6 +76,25 @@ class Client
             }
         }
     }
+    private void Send(object data)
+    {
+        try
+        {
+            string request = JsonSerializer.Serialize(data);
+            stream.Write(RequestBuilder.GetBytes(request));
+        }
+        catch
+        {
+            Disconnected?.Invoke(this, new());
+        }
+        
+    }
+    private void Stop()
+    {
+        Disconnected?.Invoke(this, new EventArgs());
+        stream?.Dispose();
+        client.Close();
+    }
     private void HandleResponse(string response)
     {
         JsonNode? rootNode = JsonNode.Parse(response);
@@ -158,6 +177,7 @@ class Client
                 }
                 break;
             case "fetch_self":
+                MessageBox.Show(response);
                 if (true) // Pavlo forgot to add { "ok": true } in json so this is for DEBUG
                 {
                     JsonNode? userNode = rootNode?["response"];
@@ -182,25 +202,8 @@ class Client
                 break;
         }
     }
-    private void Send(object data)
-    {
-        try
-        {
-            string request = JsonSerializer.Serialize(data);
-            stream.Write(RequestBuilder.GetBytes(request));
-        }
-        catch
-        {
-            Disconnected?.Invoke(this, new());
-        }
-        
-    }
-    private void Stop()
-    {
-        Disconnected?.Invoke(this, new EventArgs());
-        stream?.Dispose();
-        client.Close();
-    }
+    
+
     #region request methods
     public void AuthorizeWithSessionId(string sessionId, int userId)
     { 
@@ -252,28 +255,27 @@ class Client
         };
         Send(data);
     }
-
-    public void FetchChats()
-    {
-
-    }
     public void FetchUser(string id)
     {
 
     }
+
+    public void FetchChats()
+    {
+
+    }    
     public void FetchMessages(string id)
     {
 
     }
     public void SendMessage(MessageModel message)
     {
-        /*
         var data = new
         {
-            method = "",
+            method = "send_message",
+
         };
         Send(data);
-        */
     }
     #endregion
 }

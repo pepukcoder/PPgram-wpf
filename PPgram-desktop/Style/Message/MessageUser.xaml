@@ -11,14 +11,6 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
                     <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
-                        <Ellipse x:Name="UserAvatar"
-                                    Height="40" Width="40" VerticalAlignment="Bottom"
-                                    Margin="0,0,10,0"
-                                    Visibility="Collapsed">
-                            <Ellipse.Fill>
-                                <ImageBrush ImageSource="{Binding AvatarSource}"/>
-                            </Ellipse.Fill>
-                        </Ellipse>
                         <StackPanel Orientation="Vertical">
                             <Border Background="{StaticResource MessageUser}"
                                     x:Name="MessageBody"
@@ -28,8 +20,6 @@
                                     Padding="0,10,0,3">
                                 <Grid>
                                     <Grid.RowDefinitions>
-                                        <!--name area       -->
-                                        <RowDefinition Height="Auto"/>
                                         <!--reply area      -->
                                         <RowDefinition Height="Auto"/>
                                         <!--preview area    -->
@@ -41,14 +31,7 @@
                                         <!--edited/date area-->
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock x:Name="Block_Name" Grid.Row="0"
-                                                Text="{Binding Name}"
-                                                FontSize="14"
-                                                FontWeight="SemiBold"
-                                                Foreground="Pink"
-                                                Margin="10,0,0,0"
-                                                Visibility="Collapsed"/>
-                                    <Border x:Name="Block_Reply" Grid.Row="1" 
+                                    <Border x:Name="Block_Reply" Grid.Row="0" 
                                             Background="{StaticResource MessageReplyUser}"
                                             CornerRadius="10" 
                                             Padding="3" 
@@ -56,13 +39,13 @@
                                             Visibility="Collapsed">
                                         <TextBlock Text="{Binding ReplyText}" Margin="3,0,3,0" FontSize="14" Foreground="{StaticResource PrimaryText}"/>
                                     </Border>
-                                    <Border x:Name="Block_Preview" Grid.Row="2" Height="100"
+                                    <Border x:Name="Block_Preview" Grid.Row="1" Height="100"
                                             Margin="0,5,0,3"
                                             Background="Gray"
                                             Visibility="Collapsed">
                                     </Border>
                                     <Border x:Name="Block_Attachment" 
-                                            Grid.Row="3" Margin="10,5,10,3" 
+                                            Grid.Row="2" Margin="10,5,10,3" 
                                             Visibility="Collapsed">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <Icon:MaterialIcon Kind="File" 
@@ -75,7 +58,7 @@
                                             </StackPanel>
                                         </StackPanel>
                                     </Border>
-                                    <TextBlock x:Name="Block_Message" Grid.Row="4" 
+                                    <TextBlock x:Name="Block_Message" Grid.Row="3" 
                                                 TextWrapping="Wrap"
                                                 Margin="10, 0, 10, 0"
                                                 FontSize="14"
@@ -83,7 +66,7 @@
                                                 Foreground="{StaticResource PrimaryText}"
                                                 VerticalAlignment="Stretch" MaxWidth="300"/>
                                     <TextBlock x:Name="Block_Date" 
-                                                Grid.Row="5" 
+                                                Grid.Row="4" 
                                                 HorizontalAlignment="Right"
                                                 Text="{Binding Date}"
                                                 Foreground="{StaticResource SecondaryText}"
