@@ -60,11 +60,11 @@
                         <StackPanel x:Name="NewChatBar" Orientation="Horizontal" HorizontalAlignment="Left">
                             <Icon:MaterialIcon Kind="AccountPlus" Width="24" Margin="8,0,8,0" Foreground="{StaticResource UserSelected}"/>
                             <TextBox x:Name="NewChatTextBox" Margin="0" Width ="200" BorderThickness="0" 
-                             TextAlignment="Left" FontSize="14" VerticalContentAlignment="Center" 
-                             MaxLength="25" Foreground="{StaticResource SecondaryText}" 
-                             Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
-                             FontFamily="Cascadia Mono Light"
-                             Text="{Binding NewChatName, UpdateSourceTrigger=PropertyChanged}">
+                                     TextAlignment="Left" FontSize="14" VerticalContentAlignment="Center" 
+                                     MaxLength="30" Foreground="{StaticResource SecondaryText}" 
+                                     Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
+                                     FontFamily="Cascadia Mono Light"
+                                     Text="{Binding NewChatName, UpdateSourceTrigger=PropertyChanged}">
                                 <TextBox.InputBindings>
                                     <KeyBinding Command="{Binding NewChatCommand}" Key="Return"/>
                                 </TextBox.InputBindings>
@@ -80,7 +80,7 @@
                   ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                   ScrollViewer.VerticalScrollBarVisibility="Hidden"
                   ItemContainerStyle="{StaticResource UserItem}"
-                  SelectedItem="{Binding SelectedChat}"
+                  SelectedItem="{Binding SelectedChat, Mode=TwoWay}"
                   SelectedIndex="0"
                   Padding="0">
                 </ListView>

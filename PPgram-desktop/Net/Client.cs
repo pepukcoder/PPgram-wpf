@@ -7,6 +7,8 @@ using System.Windows;
 
 using PPgram_desktop.MVVM.Model;
 using PPgram_desktop.Net.IO;
+using System.Collections.ObjectModel;
+using System.Windows.Navigation;
 
 namespace PPgram_desktop.Net;
 
@@ -17,6 +19,7 @@ class Client
     public event EventHandler<ResponseRegisterEventArgs> Registered;
     public event EventHandler<ResponseUsernameCheckEventArgs> UsernameChecked;
     public event EventHandler<ResponseFetchUserEventArgs> SelfFetched;
+    public event EventHandler<ResponseFetchChatsEventArgs> ChatsFetched;
 
     //public event EventHandler<ResponseFetchUserEventArgs> UserFetched;
     //public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
@@ -124,7 +127,6 @@ class Client
                 }
                 break;
             case "register":
-                MessageBox.Show(response);
                 if (ok == true)
                 {
                     Registered?.Invoke(this, new ResponseRegisterEventArgs
@@ -177,7 +179,6 @@ class Client
                 }
                 break;
             case "fetch_self":
-                MessageBox.Show(response);
                 if (true) // Pavlo forgot to add { "ok": true } in json so this is for DEBUG
                 {
                     JsonNode? userNode = rootNode?["response"];
@@ -191,11 +192,44 @@ class Client
                         avatarData = userNode?["avatar_data"]?.GetValue<string>()
                     });
                 }
-                if (ok == false && r_error != null)
+                else if (ok == false && r_error != null)
                 {
                     SelfFetched?.Invoke(this, new ResponseFetchUserEventArgs
                     {
                         ok = false,
+                        error = r_error
+                    });
+                }
+                break;
+            case "fetch_chats":
+                if (true) // Pavlo forgot to add { "ok": true } again so either wait or remake this check
+                {
+                    // SHITCODE CLEANING NEEDED
+                    JsonArray? chatsJson = rootNode?["response"]?.AsArray();
+                    ObservableCollection<ChatModel> chatlist = [];
+                    if (chatsJson != null)
+                    {
+                        foreach (JsonNode? chatNode in chatsJson)
+                        {
+                            ChatModel? chat = chatNode?.Deserialize<ChatModel>();
+                            if (chat != null) // REMAKE AVATAR CHECK when Pavlo reworks his response
+                            {
+                                chat.AvatarSource = "Asset/default_avatar.png";
+                                chatlist.Add(chat);
+                            }   
+                        }
+                    }
+                    ChatsFetched?.Invoke(this, new ResponseFetchChatsEventArgs
+                    {
+                        ok = true,
+                        chats = chatlist
+                    });
+                }
+                else if (ok == false && r_error != null)
+                {
+                    ChatsFetched?.Invoke(this, new ResponseFetchChatsEventArgs
+                    {
+                        ok = true,
                         error = r_error
                     });
                 }
@@ -255,14 +289,24 @@ class Client
         };
         Send(data);
     }
-    public void FetchUser(string id)
-    {
-
-    }
-
     public void FetchChats()
     {
-
+        var data = new
+        {
+            method = "fetch",
+            what = "chats"
+        };
+        Send(data);
+    }  
+    public void FetchUser(string f_username)
+    {
+        var data = new
+        {
+            method = "fetch",
+            what = "user",
+            username = f_username
+        };
+        Send(data);
     }    
     public void FetchMessages(string id)
     {
@@ -273,7 +317,13 @@ class Client
         var data = new
         {
             method = "send_message",
-
+            to = message.To,
+            has_reply = message.Reply,
+            reply_to = message.ReplyTo,
+            content = new
+            {
+                text = message.Text
+            }
         };
         Send(data);
     }
@@ -312,6 +362,13 @@ class ResponseFetchUserEventArgs : EventArgs
     public int? userId;
     public string? avatarFormat;
     public string? avatarData;
+
+    public bool ok;
+    public string error;
+}
+class ResponseFetchChatsEventArgs : EventArgs
+{
+    public ObservableCollection<ChatModel> chats;
 
     public bool ok;
     public string error;

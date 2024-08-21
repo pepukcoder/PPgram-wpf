@@ -59,8 +59,8 @@ internal class MainViewModel : INotifyPropertyChanged
     #endregion
 
     private readonly Client client = new();
-    private ProfileState profile = ProfileState.Instance;
-    private ChatState chat = ChatState.Instance;
+    private ProfileState profileState = ProfileState.Instance;
+    private ChatState chatState = ChatState.Instance;
 
     public MainViewModel()
     {
@@ -79,6 +79,7 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.ToLogin += Reg_vm_ToLogin;
         reg_vm.SendRegister += Reg_vm_SendRegister;
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
+        chat_vm.MessageSent += Chat_vm_MessageSent;
 
         // client events
         client.Authorized += Client_Authorized;
@@ -86,6 +87,7 @@ internal class MainViewModel : INotifyPropertyChanged
         client.Registered += Client_Registered;
         client.UsernameChecked += Client_UsernameChecked;
         client.SelfFetched += Client_SelfFetched;
+        client.ChatsFetched += Client_ChatsFetched;
         client.Disconnected += Client_Disconnected;
 
         CurrentPage = login_p;
@@ -99,22 +101,35 @@ internal class MainViewModel : INotifyPropertyChanged
         {
             if (String.IsNullOrEmpty(e.avatarData))
             {
-                profile.AvatarSource = "Asset/default_avatar.png";
+                profileState.AvatarSource = "Asset/default_avatar.png";
             }
             else
             {
                 string avatarPath = cachePath + e.username + e.avatarFormat;
                 CreateFile(avatarPath, e.avatarData);
-                profile.AvatarSource = avatarPath;
+                profileState.AvatarSource = avatarPath;
             }
-            profile.Name = e.name ?? "";
-            profile.Username = e.username ?? "";
-            profile.Id = e.userId ?? 0;
+            profileState.Name = e.name ?? "";
+            profileState.Username = e.username ?? "";
+            profileState.Id = e.userId ?? 0;
             chat_vm.UpdateProfile();
+            client.FetchChats();
         }
         else if (!e.ok)
         {
             ShowError("Unable to fetch profile");
+        }
+    }
+    private void Client_ChatsFetched(object? sender, ResponseFetchChatsEventArgs e)
+    {
+        if (e.ok)
+        {
+            chatState.Chats = e.chats;
+            chat_vm.UpdateChat();
+        }
+        else if (!e.ok)
+        {
+            ShowError("Unable to fetch chats");
         }
     }
     private void Client_UsernameChecked(object? sender, ResponseUsernameCheckEventArgs e)
@@ -218,6 +233,13 @@ internal class MainViewModel : INotifyPropertyChanged
             CurrentPage = login_p;
         }
     }
+
+    #region chat page handlers
+    private void Chat_vm_MessageSent(object? sender, SendMessageEventArgs e)
+    {
+        client.SendMessage(e.message);
+    }
+    #endregion
 
     #region Login page handlers
     private void Login_vm_SendLogin(object? sender, LoginEventArgs e)

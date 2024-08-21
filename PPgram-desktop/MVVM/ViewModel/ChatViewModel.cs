@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 
 using PPgram_desktop.Core;
@@ -11,6 +12,7 @@ namespace PPgram_desktop.MVVM.ViewModel;
 class ChatViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
+    public event EventHandler<SendMessageEventArgs> MessageSent;
 
     #region bindings
     // User badge
@@ -33,8 +35,28 @@ class ChatViewModel : INotifyPropertyChanged
         set { _avatarSource = value; OnPropertyChanged(); }
     }
     // Sidebar
-    public ObservableCollection<UserModel> Chats { get; set; }
-    public UserModel SelectedChat { get; set; }
+    private ObservableCollection<ChatModel> _chats;
+    public ObservableCollection<ChatModel> Chats
+    {
+        get => _chats;
+        set
+        {
+            _chats = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private ChatModel _selectedChat;
+    public ChatModel SelectedChat
+    { 
+        get => _selectedChat;
+        set
+        { 
+            _selectedChat = value;
+            OnPropertyChanged();
+            LoadMessages(_selectedChat);
+        }
+    }
     private string _newChatName;
     public string NewChatName
     {
@@ -48,7 +70,12 @@ class ChatViewModel : INotifyPropertyChanged
         set { _sidebarVisible = value; OnPropertyChanged(); }
     }
     // Messages
-    public ObservableCollection<MessageModel> ChatMessages { get; set; }
+    public ObservableCollection<MessageModel> _chatMessages;
+    public ObservableCollection<MessageModel> ChatMessages
+    { 
+        get => _chatMessages; 
+        set { _chatMessages = value; OnPropertyChanged(); }
+    }
     public MessageModel SelectedMessage { get; set; }
     private string _messageInput;
     public string MessageInput
@@ -87,7 +114,9 @@ class ChatViewModel : INotifyPropertyChanged
     #endregion
 
     private ProfileState profile = ProfileState.Instance;
-    private ChatState chat = ChatState.Instance; 
+    private ChatState chatState = ChatState.Instance;
+    private ObservableCollection<ChatModel> chats;
+    private ObservableCollection<MessageModel> chatMessages;
 
     public ChatViewModel()
     {
@@ -112,22 +141,27 @@ class ChatViewModel : INotifyPropertyChanged
     
     private void SendMessage()
     {
-        /*
         if (MessageInput.Trim() != "")
         {
-            ChatMessages.Add(new MessageModel
+            MessageModel message = new MessageModel
             {
-                Name = "PEpuk",
+                Name = "Pepuk",
+                From = profile.Id,
+                To = 1045866742,
                 Text = MessageInput,
                 Date = DateTime.Now.ToString("H:mm"),
 
                 IsFirst = false,
                 IsLast = false,
                 IsOwn = true
-            });
+            };
+            ChatMessages.Add(message);
             MessageInput = "";
+            MessageSent?.Invoke(this, new SendMessageEventArgs
+            {
+                message = message
+            });
         }
-        */
     }
     private void SettingsButton_Click()
     {
@@ -145,6 +179,13 @@ class ChatViewModel : INotifyPropertyChanged
     {
 
     }
+    private void LoadMessages(ChatModel selected_chat)
+    {
+        ChatName = selected_chat.Name;
+        ChatUsername = selected_chat.Username;
+        ChatAvatarSource = selected_chat.AvatarSource;
+        ChatMessages = selected_chat.Messages;
+    }
 
     public void UpdateProfile()
     {
@@ -154,11 +195,15 @@ class ChatViewModel : INotifyPropertyChanged
     }
     public void UpdateChat()
     {
-
+        Chats = chatState.Chats;
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
+}
+class SendMessageEventArgs : EventArgs
+{
+    public MessageModel message { get; set; }
 }

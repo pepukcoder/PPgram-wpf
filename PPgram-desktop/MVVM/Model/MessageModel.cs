@@ -4,7 +4,7 @@ internal class MessageModel
 {
     #region API
     public string Id { get; set; }
-    public string From { get; set; }
+    public int From { get; set; }
     public int To { get; set; }
     
 
