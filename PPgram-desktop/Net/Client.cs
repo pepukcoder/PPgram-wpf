@@ -29,7 +29,7 @@ class Client
     {
         client = new();
     }
-    public bool Connect(string host, int port)
+    public void Connect(string host, int port)
     {
         try
         {
@@ -38,16 +38,15 @@ class Client
             Thread listenThread = new(new ThreadStart(Listen));
             listenThread.IsBackground = true;
             listenThread.Start();
-            return true;
         }
-        catch (Exception e)
+        catch
         {
-            return false;
+            Disconnected?.Invoke(this, new());
         }
     }
     private void Listen()
     {
-        while (client.Connected)
+        while (true)
         {
             try
             {
@@ -71,17 +70,14 @@ class Client
                 // handle response
                 HandleResponse(response);
             }
-            catch (Exception e)
+            catch
             {
-                MessageBox.Show(e.Message, "Error",MessageBoxButton.OK,MessageBoxImage.Error);
-                Stop();
+                Disconnected?.Invoke(this, new());
             }
         }
     }
     private void HandleResponse(string response)
     {
-
-        // REFACTOR & CLEANING NEEDED
         JsonNode? rootNode = JsonNode.Parse(response);
 
         string? method = rootNode?["method"]?.GetValue<string>();
@@ -188,15 +184,21 @@ class Client
     }
     private void Send(object data)
     {
-        if (!client.Connected)
-            return;
-        string request = JsonSerializer.Serialize(data);
-        stream.Write(RequestBuilder.GetBytes(request));
+        try
+        {
+            string request = JsonSerializer.Serialize(data);
+            stream.Write(RequestBuilder.GetBytes(request));
+        }
+        catch
+        {
+            Disconnected?.Invoke(this, new());
+        }
+        
     }
     private void Stop()
     {
         Disconnected?.Invoke(this, new EventArgs());
-        stream.Dispose();
+        stream?.Dispose();
         client.Close();
     }
     #region request methods

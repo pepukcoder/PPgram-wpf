@@ -27,7 +27,6 @@ internal class MainViewModel : INotifyPropertyChanged
         get { return _currentPage; }
         set { _currentPage = value; OnPropertyChanged(); }
     }
-
     private bool _isError;
     public bool IsError
     {
@@ -40,6 +39,8 @@ internal class MainViewModel : INotifyPropertyChanged
         get { return _error; }
         set { _error = value; OnPropertyChanged(); }
     }
+    private bool _retryConnect;
+    public bool RetryConnect;
     #endregion
 
     #region pages
@@ -53,12 +54,19 @@ internal class MainViewModel : INotifyPropertyChanged
     private ChatViewModel chat_vm = new();
     #endregion
 
-    private readonly Client client;
+    #region commands
+    public ICommand ConnectCommand { get; set; }
+    #endregion
+
+    private readonly Client client = new();
     private ProfileState profile = ProfileState.Instance;
     private ChatState chat = ChatState.Instance;
 
     public MainViewModel()
     {
+        // commands
+        ConnectCommand = new RelayCommand(o => TryConnect());
+
         // pages
         login_p.DataContext = login_vm;
         reg_p.DataContext = reg_vm;
@@ -72,37 +80,16 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.SendRegister += Reg_vm_SendRegister;
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
 
-        CurrentPage = login_p;
-        // connection
-        client = new();
-        bool connected = false;
-        while (!connected)
-        {
-            connected = client.Connect("127.0.0.1", 8080);
-        }
-
         // client events
         client.Authorized += Client_Authorized;
         client.LoggedIn += Client_LoggedIn;
         client.Registered += Client_Registered;
         client.UsernameChecked += Client_UsernameChecked;
         client.SelfFetched += Client_SelfFetched;
+        client.Disconnected += Client_Disconnected;
 
-        // authorization
-        if (File.Exists(sessionFilePath))
-        {
-            try
-            {
-                string[] lines = File.ReadAllLines(sessionFilePath);
-                string session_id = lines[0];
-                int user_id = Int32.Parse(lines[1]);
-                client.AuthorizeWithSessionId(session_id, user_id);
-            }
-            catch
-            {
-                ShowError("Unable to create session file");
-            }
-        }
+        CurrentPage = login_p;
+        TryConnect();
     }
 
     #region client handlers
@@ -177,8 +164,13 @@ internal class MainViewModel : INotifyPropertyChanged
             login_vm.ShowError("Wrong login or password");
         }
     }
+    private void Client_Disconnected(object? sender, EventArgs e)
+    {
+        ShowError("Unable to connect to the server");
+        RetryConnect = true;
+    }
     #endregion
-    
+
     private void CreateAuthFile(string sessionId, int userId)
     {
         string sesdata = sessionId + Environment.NewLine + userId;
@@ -200,7 +192,32 @@ internal class MainViewModel : INotifyPropertyChanged
         Error = error;
         IsError = error != "";
     }
-
+    private void TryConnect()
+    {
+        // connection
+        ShowError("");
+        RetryConnect = false;
+        client.Connect("127.0.0.1", 8080);
+        // authorization
+        if (File.Exists(sessionFilePath))
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines(sessionFilePath);
+                string session_id = lines[0];
+                int user_id = Int32.Parse(lines[1]);
+                client.AuthorizeWithSessionId(session_id, user_id);
+            }
+            catch
+            {
+                ShowError("Unable to load session file");
+            }
+        }
+        else
+        {
+            CurrentPage = login_p;
+        }
+    }
 
     #region Login page handlers
     private void Login_vm_SendLogin(object? sender, LoginEventArgs e)

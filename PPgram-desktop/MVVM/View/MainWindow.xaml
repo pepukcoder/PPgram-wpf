@@ -11,7 +11,7 @@
         Title="PPgram Desktop" MinHeight="640" MinWidth="800" Background="{StaticResource BackgroundDark}"
         Closed="Window_Closed"
         FontFamily="Montserrat"
-        WindowStyle="SingleBorderWindow" WindowChrome.IsHitTestVisibleInChrome="False">
+        WindowStyle="SingleBorderWindow">
     
     <Window.DataContext>
         <viewmodel:MainViewModel/>
@@ -22,7 +22,7 @@
 
     <Grid>
         <Frame Grid.Column="1" x:Name="MainFrame" Content="{Binding CurrentPage}" NavigationUIVisibility="Hidden" Navigated="MainFrame_Navigated"/>
-        <Border Background="{StaticResource UserSelected}"
+        <Border Background="{StaticResource InputBack}"
                 Margin="10" CornerRadius="15"
                 VerticalAlignment="Bottom" HorizontalAlignment="Center"
                 Height="Auto" Visibility="{Binding IsError, Converter={StaticResource BoolToVisibilityConverter}}"
@@ -35,6 +35,11 @@
                     Foreground="White"
                     FontSize="14" TextTrimming="CharacterEllipsis"
                     DockPanel.Dock="Left"/>
+                <Button Style="{StaticResource IconButton}" Margin="5,0,0,0"
+                        Command="{Binding ConnectCommand}"
+                        Visibility="{Binding RetryConnect, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Icon:MaterialIcon Kind="CircleArrows" Height="24" Width="24"/>
+                </Button>
             </StackPanel>
             
         </Border>
