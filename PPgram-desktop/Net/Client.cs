@@ -179,7 +179,7 @@ class Client
                 }
                 break;
             case "fetch_self":
-                if (true) // Pavlo forgot to add { "ok": true } in json so this is for DEBUG
+                if (ok == true)
                 {
                     JsonNode? userNode = rootNode?["response"];
                     SelfFetched?.Invoke(this, new ResponseFetchUserEventArgs
@@ -202,7 +202,7 @@ class Client
                 }
                 break;
             case "fetch_chats":
-                if (true) // Pavlo forgot to add { "ok": true } again so either wait or remake this check
+                if (ok == true)
                 {
                     // SHITCODE CLEANING NEEDED
                     JsonArray? chatsJson = rootNode?["response"]?.AsArray();

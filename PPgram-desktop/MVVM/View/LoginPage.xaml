@@ -29,7 +29,7 @@
                         Background="{StaticResource UserHighlight}"
                         Margin="0,0,0,10">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <Icon:MaterialIcon Kind="Account" Width="24" Margin="8,0,8,0" Foreground="{StaticResource UserSelected}"/>
+                        <Icon:MaterialIcon Kind="At" Width="24" Margin="8,0,8,0" Foreground="{StaticResource UserSelected}"/>
                         <TextBox x:Name="TextBox_Login" Margin="0,0,8,0" MinWidth ="250" BorderThickness="0" 
                                  TextAlignment="Left"
                                  FontSize="14" VerticalContentAlignment="Center" 
