@@ -1,13 +1,18 @@
-﻿namespace PPgram_desktop.MVVM.Model;
+﻿using System.Text.Json.Serialization;
+
+namespace PPgram_desktop.MVVM.Model;
 
 internal class MessageModel
 {
     #region API
-    public string Id { get; set; }
+    [JsonPropertyName("message_id")]
+    public int Id { get; set; }
+    [JsonPropertyName("from_id")]
     public int From { get; set; }
     public int To { get; set; }
     
-
+    public bool Content {  get; set; }
+    [JsonPropertyName("content")]
     public string Text { get; set; } = "";
     public string Date { get; set; } = "00:00";
 
@@ -24,7 +29,6 @@ internal class MessageModel
     #region UI
     public string Name { get; set; } = "";
     public string AvatarSource { get; set; } = "/Asset/default_avatar.png";
-
 
     public bool IsEdited { get; set; }
     public bool IsFirst {  get; set; }

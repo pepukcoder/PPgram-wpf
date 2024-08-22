@@ -80,6 +80,7 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.SendRegister += Reg_vm_SendRegister;
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
         chat_vm.MessageSent += Chat_vm_MessageSent;
+        chat_vm.FetchMessages += Chat_vm_FetchMessages;
 
         // client events
         client.Authorized += Client_Authorized;
@@ -89,12 +90,25 @@ internal class MainViewModel : INotifyPropertyChanged
         client.SelfFetched += Client_SelfFetched;
         client.ChatsFetched += Client_ChatsFetched;
         client.Disconnected += Client_Disconnected;
-
+        client.MessagesFetched += Client_MessagesFetched;
         CurrentPage = login_p;
         TryConnect();
     }
 
     #region client handlers
+    private void Client_MessagesFetched(object? sender, ResponseFetchMessagesEventArgs e)
+    {
+        if (e.ok)
+        {
+            chatState.ChatMessages = e.messages;
+            chat_vm.UpdateMessages();
+        }
+        else if (!e.ok)
+        {
+
+        }
+    }
+
     private void Client_SelfFetched(object? sender, ResponseFetchUserEventArgs e)
     {
         if (e.ok)
@@ -238,6 +252,10 @@ internal class MainViewModel : INotifyPropertyChanged
     private void Chat_vm_MessageSent(object? sender, SendMessageEventArgs e)
     {
         client.SendMessage(e.message);
+    }
+    private void Chat_vm_FetchMessages(object? sender, FetchMessagesEventArgs e)
+    {
+        client.FetchMessages(e.userId);
     }
     #endregion
 

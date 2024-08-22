@@ -11,7 +11,7 @@ internal sealed class ChatState
     public string Name { get; set; }
     public string Username { get; set; }
     public string AvatarSource { get; set; }
-    public string Id { get; set; }
+    public int Id { get; set; }
     public ObservableCollection<ChatModel> Chats { get; set; }
     public ObservableCollection<MessageModel> ChatMessages { get; set; }
 }

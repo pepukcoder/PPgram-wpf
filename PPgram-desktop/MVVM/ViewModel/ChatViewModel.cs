@@ -13,6 +13,7 @@ class ChatViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<SendMessageEventArgs> MessageSent;
+    public event EventHandler<FetchMessagesEventArgs> FetchMessages;
 
     #region bindings
     // User badge
@@ -147,7 +148,7 @@ class ChatViewModel : INotifyPropertyChanged
             {
                 Name = "Pepuk",
                 From = profile.Id,
-                To = 1045866742,
+                To = chatState.Id,
                 Text = MessageInput,
                 Date = DateTime.Now.ToString("H:mm"),
 
@@ -185,6 +186,13 @@ class ChatViewModel : INotifyPropertyChanged
         ChatUsername = selected_chat.Username;
         ChatAvatarSource = selected_chat.AvatarSource;
         ChatMessages = selected_chat.Messages;
+        //chatState.Id = selected_chat.ID;
+        chatState.Id = 1045866742;
+        FetchMessages?.Invoke(this, new FetchMessagesEventArgs
+        {
+            //userId = selected_chat.ID
+            userId = 1045866742
+        });
     }
 
     public void UpdateProfile()
@@ -197,6 +205,10 @@ class ChatViewModel : INotifyPropertyChanged
     {
         Chats = chatState.Chats;
     }
+    public void UpdateMessages()
+    {
+        ChatMessages = chatState.ChatMessages;
+    }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
@@ -205,5 +217,9 @@ class ChatViewModel : INotifyPropertyChanged
 }
 class SendMessageEventArgs : EventArgs
 {
-    public MessageModel message { get; set; }
+    public MessageModel message;
+}
+class FetchMessagesEventArgs : EventArgs
+{
+    public int userId;
 }

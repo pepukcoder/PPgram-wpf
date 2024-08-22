@@ -20,6 +20,7 @@ class Client
     public event EventHandler<ResponseUsernameCheckEventArgs> UsernameChecked;
     public event EventHandler<ResponseFetchUserEventArgs> SelfFetched;
     public event EventHandler<ResponseFetchChatsEventArgs> ChatsFetched;
+    public event EventHandler<ResponseFetchMessagesEventArgs> MessagesFetched;
 
     //public event EventHandler<ResponseFetchUserEventArgs> UserFetched;
     //public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
@@ -181,7 +182,7 @@ class Client
             case "fetch_self":
                 if (ok == true)
                 {
-                    JsonNode? userNode = rootNode?["response"];
+                    JsonNode? userNode = rootNode?["data"];
                     SelfFetched?.Invoke(this, new ResponseFetchUserEventArgs
                     {
                         ok = true,
@@ -205,7 +206,7 @@ class Client
                 if (ok == true)
                 {
                     // SHITCODE CLEANING NEEDED
-                    JsonArray? chatsJson = rootNode?["response"]?.AsArray();
+                    JsonArray? chatsJson = rootNode?["data"]?.AsArray();
                     ObservableCollection<ChatModel> chatlist = [];
                     if (chatsJson != null)
                     {
@@ -230,6 +231,38 @@ class Client
                     ChatsFetched?.Invoke(this, new ResponseFetchChatsEventArgs
                     {
                         ok = true,
+                        error = r_error
+                    });
+                }
+                break;
+            case "fetch_messages":
+                if (ok == true)
+                {
+                    JsonArray? messagesJson = rootNode?["data"]?.AsArray();
+                    ObservableCollection<MessageModel> messagelist = [];
+                    if (messagesJson != null)
+                    {
+                        foreach (JsonNode? chatNode in messagesJson)
+                        {
+                            MessageModel? message = chatNode?.Deserialize<MessageModel>();
+                            if (message != null) // REMAKE AVATAR CHECK when Pavlo reworks his response
+                            {
+                                message.AvatarSource = "Asset/default_avatar.png";
+                                messagelist.Add(message);
+                            }
+                        }
+                    }
+                    MessagesFetched?.Invoke(this, new ResponseFetchMessagesEventArgs
+                    {
+                        ok = true,
+                        messages = messagelist
+                    });
+                }
+                else if (ok == false && r_error != null)
+                {
+                    MessagesFetched?.Invoke(this, new ResponseFetchMessagesEventArgs
+                    {
+                        ok = false,
                         error = r_error
                     });
                 }
@@ -308,9 +341,16 @@ class Client
         };
         Send(data);
     }    
-    public void FetchMessages(string id)
+    public void FetchMessages(int id)
     {
-
+        var data = new
+        {
+            method = "fetch",
+            what = "messages",
+            chat_id = id,
+            range = new[]{ -1, 0}
+        };
+        Send(data);
     }
     public void SendMessage(MessageModel message)
     {
@@ -373,7 +413,13 @@ class ResponseFetchChatsEventArgs : EventArgs
     public bool ok;
     public string error;
 }
+class ResponseFetchMessagesEventArgs : EventArgs
+{
+    public ObservableCollection<MessageModel> messages;
 
+    public bool ok;
+    public string error;
+}
 class IncomeMessageEventArgs : EventArgs
 {
     public int? sender_id;
