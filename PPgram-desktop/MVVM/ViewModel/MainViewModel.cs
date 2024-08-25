@@ -10,14 +10,13 @@ using PPgram_desktop.Net;
 using PPgram_desktop.Core;
 using PPgram_desktop.MVVM.Model;
 using PPgram_desktop.MVVM.View;
+using System.Windows.Media.Imaging;
+using PPgram_desktop.MVVM.Model.DTO;
 
 namespace PPgram_desktop.MVVM.ViewModel;
 
 internal class MainViewModel : INotifyPropertyChanged
 {
-    private readonly string sessionFilePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\session.sesf");
-    private readonly string cachePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\cache\\");
-
     public event PropertyChangedEventHandler? PropertyChanged;
 
     #region bindings
@@ -39,8 +38,12 @@ internal class MainViewModel : INotifyPropertyChanged
         get { return _error; }
         set { _error = value; OnPropertyChanged(); }
     }
-    private bool _retryConnect;
-    public bool RetryConnect;
+    private bool _disconected;
+    public bool Disconnected
+    {
+        get { return _disconected; }
+        set { _disconected = value; OnPropertyChanged(); }
+    }
     #endregion
 
     #region pages
@@ -58,21 +61,20 @@ internal class MainViewModel : INotifyPropertyChanged
     public ICommand ConnectCommand { get; set; }
     #endregion
 
+    private readonly string sessionFilePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\session.sesf");
+    private readonly string cachePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\cache\\");
     private readonly Client client = new();
     private ProfileState profileState = ProfileState.Instance;
-    private ChatState chatState = ChatState.Instance;
 
     public MainViewModel()
     {
         // commands
         ConnectCommand = new RelayCommand(o => TryConnect());
-
         // pages
         login_p.DataContext = login_vm;
         reg_p.DataContext = reg_vm;
         settings_p.DataContext = settings_vm;
         chat_p.DataContext = chat_vm;
-
         // pages events
         login_vm.ToReg += Login_vm_ToReg;
         login_vm.SendLogin += Login_vm_SendLogin;
@@ -81,7 +83,6 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
         chat_vm.MessageSent += Chat_vm_MessageSent;
         chat_vm.FetchMessages += Chat_vm_FetchMessages;
-
         // client events
         client.Authorized += Client_Authorized;
         client.LoggedIn += Client_LoggedIn;
@@ -91,41 +92,77 @@ internal class MainViewModel : INotifyPropertyChanged
         client.ChatsFetched += Client_ChatsFetched;
         client.Disconnected += Client_Disconnected;
         client.MessagesFetched += Client_MessagesFetched;
-        CurrentPage = login_p;
+        client.NewMessage += Client_NewMessage;
+
+        // initial connection
         TryConnect();
     }
 
     #region client handlers
+    private void Client_NewMessage(object? sender, NewMessageEventArgs e)
+    {
+        if (e.ok)
+        {
+            MessageModel message = new MessageModel
+            {
+                Id = e.message?.Id ?? 0,
+                Chat = e.message?.ChatId ?? 0,
+                From = e.message?.From ?? 0,
+                // Name
+                // Avatar
+                Text = e.message?.Text ?? "",
+            };
+            if (e.message?.From == profileState.Id)
+                message.Own = true;
+            message.Date = DateTimeOffset.FromUnixTimeSeconds(e.message?.Date ?? 0).DateTime.ToLocalTime().ToString("H:mm");
+            chat_vm.AddMessage(message);
+        }
+    }
     private void Client_MessagesFetched(object? sender, ResponseFetchMessagesEventArgs e)
     {
         if (e.ok)
         {
-            chatState.ChatMessages = e.messages;
-            chat_vm.UpdateMessages();
+            // DEBUG
+            BitmapImage ava = new(new Uri("pack://application:,,,/Asset/default_avatar.png", UriKind.Absolute));
+            ava.Freeze();
+            // -----
+            ObservableCollection<MessageModel> messages = [];
+            foreach (MessageDTO message_dto in e.messages)
+            {
+                MessageModel message = new MessageModel
+                {
+                    Id = message_dto.Id ?? 0,
+                    Chat = message_dto.ChatId ?? 0,
+                    From = message_dto.From ?? 0,
+                    // Name
+                    // Avatar
+                    Text = message_dto.Text ?? "",
+
+                };
+                if (message_dto.From == profileState.Id)
+                    message.Own = true;
+                message.Date = DateTimeOffset.FromUnixTimeSeconds(message_dto.Date ?? 0).DateTime.ToLocalTime().ToString("H:mm");
+                messages.Add(message);
+            }
+            chat_vm.UpdateMessages(messages);
         }
         else if (!e.ok)
         {
-
+            ShowError("Unable to fetch messages");
         }
     }
-
     private void Client_SelfFetched(object? sender, ResponseFetchUserEventArgs e)
     {
-        if (e.ok)
+        if (e.ok && e.user != null)
         {
-            if (String.IsNullOrEmpty(e.avatarData))
-            {
-                profileState.AvatarSource = "Asset/default_avatar.png";
-            }
-            else
-            {
-                string avatarPath = cachePath + e.username + e.avatarFormat;
-                CreateFile(avatarPath, e.avatarData);
-                profileState.AvatarSource = avatarPath;
-            }
-            profileState.Name = e.name ?? "";
-            profileState.Username = e.username ?? "";
-            profileState.Id = e.userId ?? 0;
+            profileState.Name = e.user.Name ?? "";
+            profileState.Username = e.user.Username ?? "";
+            profileState.Id = e.user.Id ?? 0;
+            // DEBUG
+            BitmapImage ava = new(new Uri("pack://application:,,,/Asset/default_avatar.png", UriKind.Absolute));
+            ava.Freeze();
+            profileState.Avatar = ava;
+            // -----
             chat_vm.UpdateProfile();
             client.FetchChats();
         }
@@ -138,14 +175,32 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         if (e.ok)
         {
-            chatState.Chats = e.chats;
-            chat_vm.UpdateChat();
+            ObservableCollection<ChatModel> chats = [];
+            foreach (ChatDTO chat_dto in e.chats)
+            {
+                // DEBUG
+                BitmapImage ava = new(new Uri("pack://application:,,,/Asset/default_avatar.png", UriKind.Absolute));
+                ava.Freeze();
+                profileState.Avatar = ava;
+                // -----
+                ChatModel chat = new ChatModel
+                {
+                    Name = chat_dto.Name ?? "",
+                    Username = chat_dto.Username ?? "",
+                    Id = chat_dto.Id ?? 0,
+                    Avatar = ava,
+                    LastMessage = ""
+                };
+                chats.Add(chat);
+            }
+            chat_vm.UpdateChats(chats);
         }
         else if (!e.ok)
         {
             ShowError("Unable to fetch chats");
         }
     }
+
     private void Client_UsernameChecked(object? sender, ResponseUsernameCheckEventArgs e)
     {
         if(e.available)
@@ -157,7 +212,7 @@ internal class MainViewModel : INotifyPropertyChanged
             reg_vm.ShowUsernameStatus("This username is already taken");
         }
     }
-    private void Client_Authorized(object? sender, ResponseAuthEventArgs e)
+    private void Client_Authorized(object? sender, ResponseSessionEventArgs e)
     {
         if (e.ok)
         {
@@ -169,7 +224,7 @@ internal class MainViewModel : INotifyPropertyChanged
             CurrentPage = login_p;
         }
     }
-    private void Client_Registered(object? sender, ResponseRegisterEventArgs e)
+    private void Client_Registered(object? sender, ResponseSessionEventArgs e)
     {
         if (e.ok)
         {
@@ -178,10 +233,10 @@ internal class MainViewModel : INotifyPropertyChanged
         }
         else if (!e.ok)
         {
-            reg_vm.ShowError("Something went wrong");
+            ShowError("Something went wrong");
         }
     }
-    private void Client_LoggedIn(object? sender, ResponseLoginEventArgs e)
+    private void Client_LoggedIn(object? sender, ResponseSessionEventArgs e)
     {
         if (e.ok)
         {
@@ -190,13 +245,12 @@ internal class MainViewModel : INotifyPropertyChanged
         }
         else if (!e.ok)
         {
-            login_vm.ShowError("Wrong login or password");
+            ShowError("Wrong login or password");
         }
     }
     private void Client_Disconnected(object? sender, EventArgs e)
     {
-        ShowError("Unable to connect to the server");
-        RetryConnect = true;
+        Disconnected = true;
     }
     #endregion
 
@@ -225,7 +279,8 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         // connection
         ShowError("");
-        RetryConnect = false;
+        Disconnected = false;
+        //client.Connect("6.tcp.eu.ngrok.io", 16349);
         client.Connect("127.0.0.1", 8080);
         // authorization
         if (File.Exists(sessionFilePath))
@@ -275,7 +330,7 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         client.RegisterNewUser(e.username, e.name, e.password);
     }
-    private void Reg_vm_SendUsernameCheck(object? sender, CheckUsernameEventArgs e)
+    private void Reg_vm_SendUsernameCheck(object? sender, RegisterEventArgs e)
     {
         client.ChekUsernameAvailable(e.username);
     }

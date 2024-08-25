@@ -25,4 +25,9 @@
     <SolidColorBrush x:Key="InputBack" Color="#131313"/>
     <SolidColorBrush x:Key="InputSide" Color="#0f0f0f"/>
     <SolidColorBrush x:Key="InputIcon" Color="#2a2a2a"/>
+    
+    <SolidColorBrush x:Key="ScrollIdle" Color="#101010"/>
+    <SolidColorBrush x:Key="ScrollHover" Color="#151515"/>
+    <SolidColorBrush x:Key="ScrollDrag" Color="#202020"/>
+    
 </ResourceDictionary>

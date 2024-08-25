@@ -41,7 +41,7 @@
                         Margin="0,8,0,0" Height="50">
                         <Ellipse Width="40" Height="40" VerticalAlignment="Center" DockPanel.Dock="Left">
                             <Ellipse.Fill>
-                                <ImageBrush ImageSource="{Binding AvatarSource}"/>
+                                <ImageBrush ImageSource="{Binding Avatar}"/>
                             </Ellipse.Fill>
                         </Ellipse>
                         <StackPanel Orientation="Vertical" MaxWidth="164" VerticalAlignment="Center" Margin="8,0,8,0">
@@ -94,7 +94,7 @@
                         Command="{Binding ShowProfileCommand}" DockPanel.Dock="Left">
                     <Ellipse Width="40" Height="40">
                         <Ellipse.Fill>
-                            <ImageBrush ImageSource="{Binding ChatAvatarSource}"/>
+                            <ImageBrush ImageSource="{Binding ChatAvatar}"/>
                         </Ellipse.Fill>
                     </Ellipse>
                 </Button>
@@ -113,16 +113,17 @@
 
         <!--Chat messages-->
         <ListView Grid.Row="1" Grid.Column="1"
-                  Margin="10,0,10,0"
+                  Margin="10,0,2,0"
+                  x:Name="Listview_Messages"
                   VerticalAlignment="Stretch"
                   ItemsSource="{Binding ChatMessages}"
                   BorderThickness="0"
                   Background="Transparent"
                   ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                  ScrollViewer.VerticalScrollBarVisibility="Visible"
                   ItemContainerStyle="{StaticResource MessageItem}"
                   SelectedItem="{Binding SelectedMessage}"
-                  SelectedIndex="0">
+                  VirtualizingPanel.ScrollUnit="Pixel">
         </ListView>
         
         <!--Input area-->
@@ -146,8 +147,9 @@
                          FontSize="14" VerticalContentAlignment="Center" 
                          Foreground="{StaticResource PrimaryText}" 
                          Background="Transparent" CaretBrush="White" SelectionBrush="{StaticResource UserSelected}"
-                         HorizontalAlignment="Stretch" Margin="4,0,4,0" TextWrapping="Wrap" AcceptsReturn="True" MaxLines="20"
-                         Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}">
+                         HorizontalAlignment="Stretch" Margin="4,0,4,0" TextWrapping="Wrap" MaxLines="20"
+                         Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}"
+                         PreviewKeyDown="MessageInputBox_PreviewKeyDown">
                 </TextBox>
             </DockPanel>
         </Border>

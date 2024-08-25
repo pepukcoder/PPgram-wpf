@@ -1,4 +1,6 @@
-﻿namespace PPgram_desktop.MVVM.Model;
+﻿using System.Windows.Media.Imaging;
+
+namespace PPgram_desktop.MVVM.Model;
 
 internal sealed class ProfileState
 {
@@ -8,7 +10,7 @@ internal sealed class ProfileState
 
     public string Name { get; set; }
     public string Username { get; set; }
-    public string AvatarSource { get; set; }
+    public BitmapImage Avatar { get; set; }
     public int Id { get; set; }
 
 }

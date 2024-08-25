@@ -8,20 +8,23 @@ using System.Windows;
 using PPgram_desktop.MVVM.Model;
 using PPgram_desktop.Net.IO;
 using System.Collections.ObjectModel;
-using System.Windows.Navigation;
+using PPgram_desktop.MVVM.Model.DTO;
+using System.Xml.Linq;
+using System.Diagnostics.Eventing.Reader;
 
 namespace PPgram_desktop.Net;
 
 class Client
 {
-    public event EventHandler<ResponseAuthEventArgs> Authorized;
-    public event EventHandler<ResponseLoginEventArgs> LoggedIn;
-    public event EventHandler<ResponseRegisterEventArgs> Registered;
+    public event EventHandler<ResponseSessionEventArgs> Authorized;
+    public event EventHandler<ResponseSessionEventArgs> LoggedIn;
+    public event EventHandler<ResponseSessionEventArgs> Registered;
     public event EventHandler<ResponseUsernameCheckEventArgs> UsernameChecked;
     public event EventHandler<ResponseFetchUserEventArgs> SelfFetched;
     public event EventHandler<ResponseFetchChatsEventArgs> ChatsFetched;
     public event EventHandler<ResponseFetchMessagesEventArgs> MessagesFetched;
 
+    public event EventHandler<NewMessageEventArgs> NewMessage;
     //public event EventHandler<ResponseFetchUserEventArgs> UserFetched;
     //public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
     public event EventHandler Disconnected;
@@ -39,8 +42,8 @@ class Client
         {
             client.Connect(host, port);
             stream = client.GetStream();
-            Thread listenThread = new(new ThreadStart(Listen));
-            listenThread.IsBackground = true;
+            Thread listenThread = new(new ThreadStart(Listen))
+            { IsBackground = true };
             listenThread.Start();
         }
         catch
@@ -50,29 +53,50 @@ class Client
     }
     private void Listen()
     {
+        List<byte> response_chunks = [];
+        int expected_size = 0;
+        bool isFirst = true;
         while (true)
         {
             try
             {
                 int read_count;
 
-                // get server response length
-                byte[] length_bytes = new byte[4];
-                read_count = stream.Read(length_bytes, 0, 4);
-                if (read_count == 0) break;
-                if (BitConverter.IsLittleEndian) Array.Reverse(length_bytes);
+                // get server response length if chunk is first
+                if (isFirst)
+                {
+                    byte[] length_bytes = new byte[4];
+                    read_count = stream.Read(length_bytes, 0, 4);
+                    if (read_count == 0) break;
+                    if (BitConverter.IsLittleEndian) Array.Reverse(length_bytes);
+                    int length = BitConverter.ToInt32(length_bytes);
 
-                int length = BitConverter.ToInt32(length_bytes);
+                    expected_size = length;
+                    isFirst = false;
+                }
+                
+                // get server response chunk
+                byte[] responseBytes = new byte[expected_size];
+                read_count = stream.Read(responseBytes, 0, expected_size);
 
-                // get server response itself
-                byte[] responseBytes = new byte[length];
-                read_count = stream.Read(responseBytes, 0, length);
-                if (read_count == 0) break;
+                // cut chunk by actual read count and to list 
+                ArraySegment<byte> segment = new(responseBytes, 0, read_count);
+                responseBytes = [.. segment];
+                response_chunks.AddRange(responseBytes);
 
-                string response = Encoding.UTF8.GetString(responseBytes);
+                if (response_chunks.Count >= expected_size)
+                {
+                    // get whole response if size equals expected
+                    string response = Encoding.UTF8.GetString(response_chunks.ToArray());
 
-                // handle response
-                HandleResponse(response);
+                    // reset chunks
+                    response_chunks.Clear();
+                    expected_size = 0;
+                    isFirst = true;
+
+                    // handle response
+                    HandleResponse(response);
+                } 
             }
             catch
             {
@@ -85,7 +109,7 @@ class Client
         try
         {
             string request = JsonSerializer.Serialize(data);
-            stream.Write(RequestBuilder.GetBytes(request));
+            stream?.Write(RequestBuilder.GetBytes(request));
         }
         catch
         {
@@ -102,16 +126,19 @@ class Client
     private void HandleResponse(string response)
     {
         JsonNode? rootNode = JsonNode.Parse(response);
-
+        // parse common fields
         string? method = rootNode?["method"]?.GetValue<string>();
+        string? r_event = rootNode?["event"]?.GetValue<string>();
         bool? ok = rootNode?["ok"]?.GetValue<bool>();
         string? r_error = rootNode?["error"]?.GetValue<string>();
+    
+        // parse specific fields
         switch (method)
         {
             case "login":
                 if (ok == true)
                 {
-                    LoggedIn?.Invoke(this, new ResponseLoginEventArgs
+                    LoggedIn?.Invoke(this, new ResponseSessionEventArgs
                     {
                         ok = true,
                         sessionId = rootNode?["session_id"]?.GetValue<string>(),
@@ -120,7 +147,7 @@ class Client
                 }
                 else if (ok == false && r_error != null)
                 {
-                    LoggedIn?.Invoke(this, new ResponseLoginEventArgs
+                    LoggedIn?.Invoke(this, new ResponseSessionEventArgs
                     {
                         ok = false,
                         error = r_error
@@ -130,7 +157,7 @@ class Client
             case "register":
                 if (ok == true)
                 {
-                    Registered?.Invoke(this, new ResponseRegisterEventArgs
+                    Registered?.Invoke(this, new ResponseSessionEventArgs
                     {
                         ok = true,
                         sessionId = rootNode?["session_id"]?.GetValue<string>(),
@@ -139,7 +166,7 @@ class Client
                 }
                 else if (ok == false && r_error != null)
                 {
-                    Registered?.Invoke(this, new ResponseRegisterEventArgs
+                    Registered?.Invoke(this, new ResponseSessionEventArgs
                     {
                         ok = false,
                         error = r_error
@@ -149,14 +176,14 @@ class Client
             case "auth":
                 if (ok == true)
                 {
-                    Authorized?.Invoke(this, new ResponseAuthEventArgs
+                    Authorized?.Invoke(this, new ResponseSessionEventArgs
                     {
                         ok = true
                     });
                 }
                 else if(ok == false && r_error != null)
                 {
-                    Authorized?.Invoke(this, new ResponseAuthEventArgs
+                    Authorized?.Invoke(this, new ResponseSessionEventArgs
                     {
                         ok = false,
                         error = r_error
@@ -186,11 +213,13 @@ class Client
                     SelfFetched?.Invoke(this, new ResponseFetchUserEventArgs
                     {
                         ok = true,
-                        name = userNode?["name"]?.GetValue<string>(),
-                        username = userNode?["username"]?.GetValue<string>(),
-                        userId = userNode?["user_id"]?.GetValue<int>(),
-                        avatarFormat = userNode?["avatar_format"]?.GetValue<string>(),
-                        avatarData = userNode?["avatar_data"]?.GetValue<string>()
+                        user = new ProfileDTO
+                        {
+                            Name = userNode?["name"]?.GetValue<string>(),
+                            Username = userNode?["username"]?.GetValue<string>(),
+                            Id = userNode?["user_id"]?.GetValue<int>(),
+                            Photo = userNode?["photo"]?.GetValue<string>()
+                        }
                     });
                 }
                 else if (ok == false && r_error != null)
@@ -207,24 +236,23 @@ class Client
                 {
                     // SHITCODE CLEANING NEEDED
                     JsonArray? chatsJson = rootNode?["data"]?.AsArray();
-                    ObservableCollection<ChatModel> chatlist = [];
+                    ObservableCollection<ChatDTO> chatlist = [];
                     if (chatsJson != null)
                     {
                         foreach (JsonNode? chatNode in chatsJson)
                         {
-                            ChatModel? chat = chatNode?.Deserialize<ChatModel>();
-                            if (chat != null) // REMAKE AVATAR CHECK when Pavlo reworks his response
+                            ChatDTO? chat = chatNode?.Deserialize<ChatDTO>();
+                            if (chat != null)
                             {
-                                chat.AvatarSource = "Asset/default_avatar.png";
                                 chatlist.Add(chat);
-                            }   
+                            } 
                         }
+                        ChatsFetched?.Invoke(this, new ResponseFetchChatsEventArgs
+                        {
+                            ok = true,
+                            chats = chatlist
+                        });
                     }
-                    ChatsFetched?.Invoke(this, new ResponseFetchChatsEventArgs
-                    {
-                        ok = true,
-                        chats = chatlist
-                    });
                 }
                 else if (ok == false && r_error != null)
                 {
@@ -237,26 +265,23 @@ class Client
                 break;
             case "fetch_messages":
                 if (ok == true)
-                {
+                {        
                     JsonArray? messagesJson = rootNode?["data"]?.AsArray();
-                    ObservableCollection<MessageModel> messagelist = [];
+                    ObservableCollection<MessageDTO> messagelist = [];
                     if (messagesJson != null)
                     {
                         foreach (JsonNode? chatNode in messagesJson)
                         {
-                            MessageModel? message = chatNode?.Deserialize<MessageModel>();
-                            if (message != null) // REMAKE AVATAR CHECK when Pavlo reworks his response
-                            {
-                                message.AvatarSource = "Asset/default_avatar.png";
+                            MessageDTO? message = chatNode?.Deserialize<MessageDTO>();
+                            if (message != null)
                                 messagelist.Add(message);
-                            }
                         }
+                        MessagesFetched?.Invoke(this, new ResponseFetchMessagesEventArgs
+                        {
+                            ok = true,
+                            messages = messagelist
+                        }); 
                     }
-                    MessagesFetched?.Invoke(this, new ResponseFetchMessagesEventArgs
-                    {
-                        ok = true,
-                        messages = messagelist
-                    });
                 }
                 else if (ok == false && r_error != null)
                 {
@@ -268,8 +293,33 @@ class Client
                 }
                 break;
         }
+        switch (r_event)
+        {
+            case "new_message":
+                if (ok == true)
+                {
+                    JsonNode? messageJson = rootNode?["data"];
+                    if (messageJson != null)
+                    {
+                        MessageDTO? message_dto = messageJson.Deserialize<MessageDTO>();
+                        NewMessage?.Invoke(this, new NewMessageEventArgs
+                        {
+                            ok = true,
+                            message = message_dto
+                        });
+                    }
+                }
+                else if (ok == false && r_error != null)
+                {
+                    NewMessage?.Invoke(this, new NewMessageEventArgs
+                    {
+                        ok = false,
+                        error = r_error
+                    });
+                }
+                break;
+        }
     }
-    
 
     #region request methods
     public void AuthorizeWithSessionId(string sessionId, int userId)
@@ -341,24 +391,25 @@ class Client
         };
         Send(data);
     }    
-    public void FetchMessages(int id)
+    public void FetchMessages(long id)
     {
         var data = new
         {
             method = "fetch",
             what = "messages",
             chat_id = id,
-            range = new[]{ -1, 0}
+            range = new[]{ -1, -19999}
         };
         Send(data);
     }
-    public void SendMessage(MessageModel message)
+
+    public void SendMessage(MessageDTO message)
     {
         var data = new
         {
             method = "send_message",
-            to = message.To,
-            has_reply = message.Reply,
+            to = message.ChatId,
+            has_reply = message.ReplyTo != null,
             reply_to = message.ReplyTo,
             content = new
             {
@@ -370,24 +421,11 @@ class Client
     #endregion
 }
 
-class ResponseLoginEventArgs : EventArgs
+class ResponseSessionEventArgs : EventArgs
 {
     public int? userId;
     public string? sessionId;
 
-    public bool ok;
-    public string error;
-}
-class ResponseRegisterEventArgs : EventArgs
-{
-    public int? userId;
-    public string? sessionId;
-
-    public bool ok;
-    public string error;
-}
-class ResponseAuthEventArgs : EventArgs
-{
     public bool ok;
     public string error;
 }
@@ -397,32 +435,34 @@ class ResponseUsernameCheckEventArgs : EventArgs
 }
 class ResponseFetchUserEventArgs : EventArgs
 {
-    public string? name;
-    public string? username;
-    public int? userId;
-    public string? avatarFormat;
-    public string? avatarData;
+    public ProfileDTO? user;
 
     public bool ok;
     public string error;
 }
 class ResponseFetchChatsEventArgs : EventArgs
 {
-    public ObservableCollection<ChatModel> chats;
+    public ObservableCollection<ChatDTO> chats;
 
     public bool ok;
     public string error;
 }
 class ResponseFetchMessagesEventArgs : EventArgs
 {
-    public ObservableCollection<MessageModel> messages;
+    public ObservableCollection<MessageDTO> messages;
 
     public bool ok;
     public string error;
 }
+class NewMessageEventArgs : EventArgs
+{
+    public MessageDTO? message;
+
+    public bool ok;
+    public string error;
+}
+
 class IncomeMessageEventArgs : EventArgs
 {
-    public int? sender_id;
-    public int? receiver_id;
-    public MessageModel? message;
+    
 }

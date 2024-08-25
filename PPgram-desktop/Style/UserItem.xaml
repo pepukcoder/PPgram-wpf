@@ -16,7 +16,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Stretch">
                             <Ellipse Width="40" Height="40" Margin="8,0,8,0" HorizontalAlignment="Left">
                                 <Ellipse.Fill>
-                                    <ImageBrush ImageSource="{Binding AvatarSource}"/>
+                                    <ImageBrush ImageSource="{Binding Avatar}"/>
                                 </Ellipse.Fill>
                             </Ellipse>
 

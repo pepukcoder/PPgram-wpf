@@ -94,7 +94,7 @@
             </Setter.Value>
         </Setter>
         <Style.Triggers>
-            <DataTrigger Binding="{Binding IsOwn}" Value="True">
+            <DataTrigger Binding="{Binding Own}" Value="True">
                 <Setter Property="Template" Value="{StaticResource MessageItemOwn}"/>
             </DataTrigger>
         </Style.Triggers>

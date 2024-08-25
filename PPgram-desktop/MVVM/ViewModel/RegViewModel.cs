@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows.Threading;
-
 using PPgram_desktop.Core;
 
 namespace PPgram_desktop.MVVM.ViewModel;
@@ -10,9 +9,9 @@ namespace PPgram_desktop.MVVM.ViewModel;
 class RegViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
+    public event EventHandler<RegisterEventArgs> SendUsernameCheck;
+    public event EventHandler<RegisterEventArgs> SendRegister;
     public event EventHandler ToLogin;
-    public event EventHandler<CheckUsernameEventArgs> SendUsernameCheck;
-    public EventHandler<RegisterEventArgs> SendRegister;
 
     #region bindings
     public string Name { get; set; }
@@ -33,19 +32,6 @@ class RegViewModel : INotifyPropertyChanged
     {
         get { return _confirmPassword; }
         set { _confirmPassword = value; ValidatePasswordConfirm(); }
-    }
-
-    private bool _isError;
-    public bool IsError
-    {
-        get { return _isError; }
-        set { _isError = value; OnPropertyChanged(); }
-    }
-    private string _error;
-    public string Error
-    {
-        get { return _error; }
-        set { _error = value; OnPropertyChanged(); }
     }
 
     private bool _passOk;
@@ -98,14 +84,13 @@ class RegViewModel : INotifyPropertyChanged
     public ICommand RegCommand { get; set; }
     #endregion
 
-    private DispatcherTimer _timer;
+    private readonly DispatcherTimer _timer;
 
     public RegViewModel() 
     {
         UsernameOk = false;
         GoToLoginCommand = new RelayCommand(o => GoToLogin());
         RegCommand = new RelayCommand(o => TryRegister());
-
         // username check request delay timer
         _timer = new() { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += CheckUsername;
@@ -139,6 +124,7 @@ class RegViewModel : INotifyPropertyChanged
     }
     private bool ValidatePassword()
     {
+        // check if password length is valid
         if (!String.IsNullOrEmpty(Password))
         {
             if (Password.Length >= 8 && Password.Length <= 28)
@@ -157,6 +143,7 @@ class RegViewModel : INotifyPropertyChanged
     }
     private bool ValidatePasswordConfirm()
     {
+        // check if password confirmation matches password
         if (!String.IsNullOrEmpty(ConfirmPassword))
         {
             if (Password == ConfirmPassword)
@@ -175,19 +162,18 @@ class RegViewModel : INotifyPropertyChanged
     }
     private void CheckUsername(object? sender, EventArgs e)
     {
+        // stop timer to prevent request spam
         _timer.Stop();
-        SendUsernameCheck?.Invoke(this, new CheckUsernameEventArgs
+        SendUsernameCheck?.Invoke(this, new RegisterEventArgs
         {
             username = $"@{Username}"
         });
     }
     private void TryRegister()
     {
+        // check if validation passed successfully
         if (String.IsNullOrWhiteSpace(Name) || !ValidatePassword() || !ValidatePasswordConfirm() || !UsernameOk)
-        {
             return;
-        }
-        ShowError("");
         SendRegister?.Invoke(this, new RegisterEventArgs
         {
             name = Name,
@@ -206,11 +192,6 @@ class RegViewModel : INotifyPropertyChanged
         UsernameInfo = status != "";
         UsernameOk = ok;
     }
-    public void ShowError(string error)
-    {
-        Error = error;
-        IsError = error != "";
-    }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
@@ -223,8 +204,4 @@ class RegisterEventArgs : EventArgs
     public string name;
     public string username;
     public string password;
-}
-class CheckUsernameEventArgs : EventArgs
-{
-    public string username;
 }

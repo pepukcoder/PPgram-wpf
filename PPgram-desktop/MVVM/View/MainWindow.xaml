@@ -25,23 +25,19 @@
         <Border Background="{StaticResource InputBack}"
                 Margin="10" CornerRadius="15"
                 VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                Height="Auto" Visibility="{Binding IsError, Converter={StaticResource BoolToVisibilityConverter}}"
-                Canvas.ZIndex="1" >
+                Height="Auto" Visibility="{Binding Disconnected, Converter={StaticResource BoolToVisibilityConverter}}"
+                Canvas.ZIndex="1">
             <StackPanel Orientation="Horizontal" Margin="5">
                 <Icon:MaterialIcon Kind="AlertCircle" Height="24" Margin="0,0,5,0" Foreground="{StaticResource PrimaryText}"/>
-                <TextBlock Text="{Binding Error}"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Right"
-                    Foreground="White"
-                    FontSize="14" TextTrimming="CharacterEllipsis"
-                    DockPanel.Dock="Left"/>
+                <TextBlock Text="Unable to connect to the server"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource PrimaryText}"
+                           FontSize="14" TextTrimming="CharacterEllipsis"/>
                 <Button Style="{StaticResource IconButton}" Margin="5,0,0,0"
-                        Command="{Binding ConnectCommand}"
-                        Visibility="{Binding RetryConnect, Converter={StaticResource BoolToVisibilityConverter}}">
+                        Command="{Binding ConnectCommand}">
                     <Icon:MaterialIcon Kind="CircleArrows" Height="24" Width="24"/>
                 </Button>
             </StackPanel>
-            
         </Border>
     </Grid>
 </Window>
