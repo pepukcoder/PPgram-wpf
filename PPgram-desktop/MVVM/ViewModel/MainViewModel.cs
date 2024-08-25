@@ -47,14 +47,14 @@ internal class MainViewModel : INotifyPropertyChanged
     #endregion
 
     #region pages
-    private LoginPage login_p = new();
-    private LoginViewModel login_vm = new();
-    private RegPage reg_p = new();
-    private RegViewModel reg_vm = new();
-    private SettingsPage settings_p = new();
-    private SettingsViewModel settings_vm = new();
-    private ChatPage chat_p = new();
-    private ChatViewModel chat_vm = new();
+    private readonly LoginPage login_p = new();
+    private readonly LoginViewModel login_vm = new();
+    private readonly RegPage reg_p = new();
+    private readonly RegViewModel reg_vm = new();
+    private readonly SettingsPage settings_p = new();
+    private readonly SettingsViewModel settings_vm = new();
+    private readonly ChatPage chat_p = new();
+    private readonly ChatViewModel chat_vm = new();
     #endregion
 
     #region commands
@@ -62,9 +62,10 @@ internal class MainViewModel : INotifyPropertyChanged
     #endregion
 
     private readonly string sessionFilePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\session.sesf");
+    private readonly string connectFilePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\connection.txt");
     private readonly string cachePath = Environment.ExpandEnvironmentVariables("%LOCALAPPDATA%\\PPgram-desktop\\cache\\");
     private readonly Client client = new();
-    private ProfileState profileState = ProfileState.Instance;
+    private readonly ProfileState profileState = ProfileState.Instance;
 
     public MainViewModel()
     {
@@ -83,6 +84,7 @@ internal class MainViewModel : INotifyPropertyChanged
         reg_vm.SendUsernameCheck += Reg_vm_SendUsernameCheck;
         chat_vm.MessageSent += Chat_vm_MessageSent;
         chat_vm.FetchMessages += Chat_vm_FetchMessages;
+        chat_vm.NewChat += Chat_vm_NewChat;
         // client events
         client.Authorized += Client_Authorized;
         client.LoggedIn += Client_LoggedIn;
@@ -93,17 +95,36 @@ internal class MainViewModel : INotifyPropertyChanged
         client.Disconnected += Client_Disconnected;
         client.MessagesFetched += Client_MessagesFetched;
         client.NewMessage += Client_NewMessage;
-
+        client.GotNewChat += Client_GotNewChat;
         // initial connection
         TryConnect();
     }
 
     #region client handlers
+    private void Client_GotNewChat(object? sender, GotChatEventArgs e)
+    {
+        if (e.ok)
+        {
+            // DEBUG
+            BitmapImage ava = new(new Uri("pack://application:,,,/Asset/default_avatar.png", UriKind.Absolute));
+            ava.Freeze();
+            profileState.Avatar = ava;
+            // -----
+            ChatModel chat = new()
+            {
+                Name = e.chat?.Name ?? "",
+                Username = e.chat?.Username ?? "",
+                Id = e.chat?.Id ?? 0,
+                Avatar = ava,
+            };
+            chat_vm.AddChat(chat);
+        }
+    }
     private void Client_NewMessage(object? sender, NewMessageEventArgs e)
     {
         if (e.ok)
         {
-            MessageModel message = new MessageModel
+            MessageModel message = new()
             {
                 Id = e.message?.Id ?? 0,
                 Chat = e.message?.ChatId ?? 0,
@@ -129,7 +150,7 @@ internal class MainViewModel : INotifyPropertyChanged
             ObservableCollection<MessageModel> messages = [];
             foreach (MessageDTO message_dto in e.messages)
             {
-                MessageModel message = new MessageModel
+                MessageModel message = new()
                 {
                     Id = message_dto.Id ?? 0,
                     Chat = message_dto.ChatId ?? 0,
@@ -183,7 +204,7 @@ internal class MainViewModel : INotifyPropertyChanged
                 ava.Freeze();
                 profileState.Avatar = ava;
                 // -----
-                ChatModel chat = new ChatModel
+                ChatModel chat = new()
                 {
                     Name = chat_dto.Name ?? "",
                     Username = chat_dto.Username ?? "",
@@ -200,7 +221,6 @@ internal class MainViewModel : INotifyPropertyChanged
             ShowError("Unable to fetch chats");
         }
     }
-
     private void Client_UsernameChecked(object? sender, ResponseUsernameCheckEventArgs e)
     {
         if(e.available)
@@ -259,7 +279,7 @@ internal class MainViewModel : INotifyPropertyChanged
         string sesdata = sessionId + Environment.NewLine + userId;
         CreateFile(sessionFilePath, sesdata);
     }
-    private void CreateFile(string path, string data)
+    private static void CreateFile(string path, string data)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path) ?? string.Empty);
         using var writer = new StreamWriter(File.OpenWrite(path));
@@ -277,33 +297,58 @@ internal class MainViewModel : INotifyPropertyChanged
     }
     private void TryConnect()
     {
-        // connection
-        ShowError("");
-        Disconnected = false;
-        //client.Connect("6.tcp.eu.ngrok.io", 16349);
-        client.Connect("127.0.0.1", 8080);
-        // authorization
-        if (File.Exists(sessionFilePath))
+        if (File.Exists(connectFilePath))
         {
             try
             {
-                string[] lines = File.ReadAllLines(sessionFilePath);
-                string session_id = lines[0];
-                int user_id = Int32.Parse(lines[1]);
-                client.AuthorizeWithSessionId(session_id, user_id);
+                string[] lines = File.ReadAllLines(connectFilePath);
+                string host = lines[0];
+                int port = int.Parse(lines[1]);
+
+                // connection
+                ShowError("");
+                Disconnected = false;
+                client.Connect(host, port);
+
+                if (File.Exists(sessionFilePath))
+                {
+                    try
+                    {
+                        lines = File.ReadAllLines(sessionFilePath);
+                        string session_id = lines[0];
+                        int user_id = Int32.Parse(lines[1]);
+                        client.AuthorizeWithSessionId(session_id, user_id);
+                    }
+                    catch
+                    {
+                        File.Delete(sessionFilePath);
+                        ShowError("Unable to load session file");
+                    }
+                }
+                else
+                {
+                    CurrentPage = login_p;
+                }
             }
             catch
             {
-                ShowError("Unable to load session file");
+                ShowError("Unable to load connection file");
             }
         }
         else
         {
-            CurrentPage = login_p;
+            // DEBUG
+            MessageBox.Show("edit connection file appdata/local/PPgram Desktop/");
+            // -----
+            CreateFile(connectFilePath, "host" + Environment.NewLine + "port");
         }
     }
 
     #region chat page handlers
+    private void Chat_vm_NewChat(object? sender, NewChatEventArgs e)
+    {
+        client.FetchUser(e.username);
+    }
     private void Chat_vm_MessageSent(object? sender, SendMessageEventArgs e)
     {
         client.SendMessage(e.message);

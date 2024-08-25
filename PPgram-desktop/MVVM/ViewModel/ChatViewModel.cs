@@ -17,6 +17,7 @@ class ChatViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<SendMessageEventArgs> MessageSent;
     public event EventHandler<FetchMessagesEventArgs> FetchMessages;
+    public event EventHandler<NewChatEventArgs> NewChat;
     public event EventHandler ScrollToLast;
 
     #region bindings
@@ -116,7 +117,7 @@ class ChatViewModel : INotifyPropertyChanged
     //public ICommand DownloadFileCommand { get; set; }
     #endregion
 
-    private ProfileState profile = ProfileState.Instance;
+    private readonly ProfileState profile = ProfileState.Instance;
 
     public ChatViewModel()
     {
@@ -143,7 +144,7 @@ class ChatViewModel : INotifyPropertyChanged
     {
         if (MessageInput.Trim() != "")
         {
-            MessageModel message = new MessageModel
+            MessageModel message = new()
             {
                 Name = "Pepuk",
                 From = profile.Id,
@@ -176,6 +177,11 @@ class ChatViewModel : INotifyPropertyChanged
     }
     private void NewChat_Enter()
     {
+        if (!String.IsNullOrEmpty(NewChatName))
+            NewChat?.Invoke(this, new NewChatEventArgs
+            {
+                username = NewChatName.Trim()
+            });
         NewChatName = "";
     }
     private void ShowProfile()
@@ -224,13 +230,25 @@ class ChatViewModel : INotifyPropertyChanged
         {
             if (chat.Id == message.From)
             {
-                Application.Current.Dispatcher.Invoke(() => {
+                Application.Current.Dispatcher.Invoke(() => 
+                {
                     chat.Messages.Add(message);
                 });
                 LoadMessages();
                 ScrollToLast?.Invoke(this, EventArgs.Empty);
             }
         }
+    }
+    public void AddChat(ChatModel chat)
+    {
+        if (!Chats.Any(ex_chat => ex_chat.Id == chat.Id))
+        {
+            Application.Current.Dispatcher.Invoke(() => 
+            {
+                Chats.Add(chat);
+            });
+            LoadMessages();
+        } 
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
@@ -245,4 +263,8 @@ class SendMessageEventArgs : EventArgs
 class FetchMessagesEventArgs : EventArgs
 {
     public int userId;
+}
+class NewChatEventArgs : EventArgs
+{
+    public string username;
 }

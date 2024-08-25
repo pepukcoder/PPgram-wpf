@@ -23,10 +23,9 @@ class Client
     public event EventHandler<ResponseFetchUserEventArgs> SelfFetched;
     public event EventHandler<ResponseFetchChatsEventArgs> ChatsFetched;
     public event EventHandler<ResponseFetchMessagesEventArgs> MessagesFetched;
-
     public event EventHandler<NewMessageEventArgs> NewMessage;
-    //public event EventHandler<ResponseFetchUserEventArgs> UserFetched;
-    //public event EventHandler<IncomeMessageEventArgs> MessageRecieved;
+    public event EventHandler<GotChatEventArgs> GotNewChat;
+
     public event EventHandler Disconnected;
 
     private readonly TcpClient client;
@@ -127,13 +126,12 @@ class Client
     {
         JsonNode? rootNode = JsonNode.Parse(response);
         // parse common fields
-        string? method = rootNode?["method"]?.GetValue<string>();
+        string? r_method = rootNode?["method"]?.GetValue<string>();
         string? r_event = rootNode?["event"]?.GetValue<string>();
-        bool? ok = rootNode?["ok"]?.GetValue<bool>();
         string? r_error = rootNode?["error"]?.GetValue<string>();
-    
+        bool? ok = rootNode?["ok"]?.GetValue<bool>();
         // parse specific fields
-        switch (method)
+        switch (r_method)
         {
             case "login":
                 if (ok == true)
@@ -276,16 +274,41 @@ class Client
                             if (message != null)
                                 messagelist.Add(message);
                         }
-                        MessagesFetched?.Invoke(this, new ResponseFetchMessagesEventArgs
-                        {
-                            ok = true,
-                            messages = messagelist
-                        }); 
                     }
+                    MessagesFetched?.Invoke(this, new ResponseFetchMessagesEventArgs
+                    {
+                        ok = true,
+                        messages = messagelist
+                    });
                 }
                 else if (ok == false && r_error != null)
                 {
                     MessagesFetched?.Invoke(this, new ResponseFetchMessagesEventArgs
+                    {
+                        ok = false,
+                        error = r_error
+                    });
+                }
+                break;
+            case "fetch_user":
+                if (ok == true)
+                {
+                    JsonNode? userNode = rootNode?["data"];
+                    GotNewChat?.Invoke(this, new GotChatEventArgs
+                    {
+                        ok = true,
+                        chat = new ChatDTO
+                        {
+                            Name = userNode?["name"]?.GetValue<string>(),
+                            Username = userNode?["username"]?.GetValue<string>(),
+                            Id = userNode?["user_id"]?.GetValue<int>(),
+                            Photo = userNode?["photo"]?.GetValue<string>()
+                        }
+                    });
+                }
+                else if (ok == false && r_error != null)
+                {
+                    GotNewChat?.Invoke(this, new GotChatEventArgs
                     {
                         ok = false,
                         error = r_error
@@ -312,6 +335,25 @@ class Client
                 else if (ok == false && r_error != null)
                 {
                     NewMessage?.Invoke(this, new NewMessageEventArgs
+                    {
+                        ok = false,
+                        error = r_error
+                    });
+                }
+                break;
+            case "new_chat":
+                if (ok == true)
+                {
+                    JsonNode? chatNode = rootNode?["data"];
+                    GotNewChat?.Invoke(this, new GotChatEventArgs
+                    {
+                        ok = true,
+                        chat = chatNode?.Deserialize<ChatDTO>()
+                    });
+                }
+                else if (ok == false && r_error != null)
+                {
+                    GotNewChat?.Invoke(this, new GotChatEventArgs
                     {
                         ok = false,
                         error = r_error
@@ -381,13 +423,13 @@ class Client
         };
         Send(data);
     }  
-    public void FetchUser(string f_username)
+    public void FetchUser(string username)
     {
         var data = new
         {
             method = "fetch",
             what = "user",
-            username = f_username
+            username = username
         };
         Send(data);
     }    
@@ -461,8 +503,10 @@ class NewMessageEventArgs : EventArgs
     public bool ok;
     public string error;
 }
-
-class IncomeMessageEventArgs : EventArgs
+class GotChatEventArgs : EventArgs
 {
-    
+    public ChatDTO? chat;
+
+    public bool ok;
+    public string error;
 }

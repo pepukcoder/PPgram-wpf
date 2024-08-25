@@ -136,8 +136,7 @@
                     <Icon:MaterialIcon Kind="Paperclip" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
                 <Button x:Name="SendButton" Margin="0,0,3,3"
-                        Background="Transparent" Foreground="{StaticResource UserSelected}" 
-                        Height="24" Style="{StaticResource RegularButton}" 
+                        Height="24" Style="{StaticResource IconButton}" 
                         VerticalAlignment="Bottom" DockPanel.Dock="Right" HorizontalAlignment="Right"
                         Command="{Binding SendMessageCommand}">
                     <Icon:MaterialIcon Kind="Send" VerticalAlignment="Center" HorizontalAlignment="Center"/>
