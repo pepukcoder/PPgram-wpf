@@ -3,4 +3,4 @@
 
 ## PrePrePrePre Alpha
 This client is currently developing in **prepreprepre alpha**(like Pavlo) state and designed **only for Windows**. 
-In the future we plan to expand it to **MacOS** and **Linux**
+Now we [developing](https://github.com/pepukcoder/PPgram) it to **MacOS**, **Linux**, **Web**, **Android** and **iOS** using AvaloniaUI 
